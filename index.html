@@ -1,632 +1,162 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>VulnWatch — IT Vulnerability Intelligence</title>
-
-<!-- PWA / iOS Meta Tags -->
-
 <meta name="application-name" content="VulnWatch">
 <meta name="description" content="Live IT vulnerability and zero-day intelligence dashboard powered by NIST NVD and CISA KEV.">
 <meta name="theme-color" content="#0a0c10">
-
-<!-- iOS PWA -->
-
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="VulnWatch">
-
-<!-- iOS Touch Icons (inline SVG as data URI) -->
-
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%230a0c10'/%3E%3Cpolygon points='256,60 452,165 452,347 256,452 60,347 60,165' fill='none' stroke='%2300e5ff' stroke-width='28'/%3E%3Ctext x='256' y='300' text-anchor='middle' font-family='monospace' font-size='180' font-weight='bold' fill='%2300e5ff'%3EV%3C/text%3E%3C/svg%3E">
-
-<!-- Web App Manifest (inline as data URI to keep single-file) -->
-
-<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22VulnWatch%20%E2%80%94%20IT%20Vulnerability%20Intelligence%22%2C%22short_name%22%3A%22VulnWatch%22%2C%22description%22%3A%22Live%20IT%20vulnerability%20dashboard%20powered%20by%20NIST%20NVD%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230a0c10%22%2C%22theme_color%22%3A%22%230a0c10%22%2C%22orientation%22%3A%22portrait-primary%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%3D%2527http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%2527%2520viewBox%3D%25270%25200%2520512%2520512%2527%253E%253Crect%2520width%3D%2527512%2527%2520height%3D%2527512%2527%2520rx%3D%2527112%2527%2520fill%3D%2527%25230a0c10%2527%2F%253E%253Cpolygon%2520points%3D%2527256%2C60%2520452%2C165%2520452%2C347%2520256%2C452%252060%2C347%252060%2C165%2527%2520fill%3D%2527none%2527%2520stroke%3D%2527%252300e5ff%2527%2520stroke-width%3D%252728%2527%2F%253E%253Ctext%2520x%3D%2527256%2527%2520y%3D%2527300%2527%2520text-anchor%3D%2527middle%2527%2520font-family%3D%2527monospace%2527%2520font-size%3D%2527180%2527%2520font-weight%3D%2527bold%2527%2520fill%3D%2527%252300e5ff%2527%253EV%253C%2Ftext%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
-
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0c10;
-    --surface: #0f1219;
-    --surface2: #161b25;
-    --border: #1e2535;
-    --accent: #00e5ff;
-    --danger: #ff3b5c;
-    --warn: #ffb800;
-    --ok: #00d68f;
-    --text: #cdd6f4;
-    --muted: #6c7a99;
-    --font-mono: 'JetBrains Mono', monospace;
-    --font-sans: 'Syne', sans-serif;
-  }
+:root{--bg:#0a0c10;--surface:#0f1219;--surface2:#161b25;--border:#1e2535;--accent:#00e5ff;--danger:#ff3b5c;--warn:#ffb800;--ok:#00d68f;--text:#cdd6f4;--muted:#6c7a99;--font-mono:'JetBrains Mono',monospace;--font-sans:'Syne',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font-sans);min-height:100vh;min-height:100dvh;overflow-x:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+.container{max-width:1400px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+header{border-bottom:1px solid var(--border);padding:20px 0;position:sticky;top:0;background:rgba(10,12,16,.95);backdrop-filter:blur(12px);z-index:100}
+.header-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:36px;height:36px;background:var(--accent);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;font-size:16px;animation:pulse-glow 3s ease-in-out infinite}
+@keyframes pulse-glow{0%,100%{box-shadow:0 0 10px rgba(0,229,255,.4)}50%{box-shadow:0 0 25px rgba(0,229,255,.8)}}
+.logo-text{font-size:22px;font-weight:800;letter-spacing:-.5px}
+.logo-text span{color:var(--accent)}
+.header-meta{font-family:var(--font-mono);font-size:11px;color:var(--muted);text-align:right;line-height:1.6}
+.live-dot{display:inline-block;width:7px;height:7px;background:var(--ok);border-radius:50%;margin-right:5px;animation:blink 1.4s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
-- { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-background: var(–bg);
-color: var(–text);
-font-family: var(–font-sans);
-min-height: 100vh;
-min-height: 100dvh;
-overflow-x: hidden;
-padding-top: env(safe-area-inset-top);
-padding-bottom: env(safe-area-inset-bottom);
-padding-left: env(safe-area-inset-left);
-padding-right: env(safe-area-inset-right);
--webkit-tap-highlight-color: transparent;
--webkit-text-size-adjust: 100%;
-}
-
-/* Animated grid background */
-body::before {
-content: ‘’;
-position: fixed;
-inset: 0;
-background-image:
-linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
-linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
-background-size: 40px 40px;
-pointer-events: none;
-z-index: 0;
-}
-
-.container { max-width: 1400px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
-
-/* Header */
-header {
-border-bottom: 1px solid var(–border);
-padding: 20px 0;
-position: sticky;
-top: 0;
-background: rgba(10,12,16,0.95);
-backdrop-filter: blur(12px);
-z-index: 100;
-}
-
-.header-inner {
-display: flex;
-align-items: center;
-justify-content: space-between;
-gap: 16px;
-flex-wrap: wrap;
-}
-
-.logo {
-display: flex;
-align-items: center;
-gap: 12px;
-}
-
-.logo-icon {
-width: 36px;
-height: 36px;
-background: var(–accent);
-clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-display: flex;
-align-items: center;
-justify-content: center;
-font-size: 16px;
-animation: pulse-glow 3s ease-in-out infinite;
-}
-
-@keyframes pulse-glow {
-0%, 100% { box-shadow: 0 0 10px rgba(0,229,255,0.4); }
-50% { box-shadow: 0 0 25px rgba(0,229,255,0.8); }
-}
-
-.logo-text {
-font-size: 22px;
-font-weight: 800;
-letter-spacing: -0.5px;
-}
-
-.logo-text span { color: var(–accent); }
-
-.header-meta {
-font-family: var(–font-mono);
-font-size: 11px;
-color: var(–muted);
-text-align: right;
-line-height: 1.6;
-}
-
-.live-dot {
-display: inline-block;
-width: 7px;
-height: 7px;
-background: var(–ok);
-border-radius: 50%;
-margin-right: 5px;
-animation: blink 1.4s ease-in-out infinite;
-}
-
-@keyframes blink {
-0%, 100% { opacity: 1; }
-50% { opacity: 0.2; }
-}
+/* Quick Presets */
+.presets-section{padding:18px 0 10px;border-bottom:1px solid var(--border);margin-bottom:4px}
+.presets-label{font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.presets-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.presets-grid{display:flex;flex-wrap:wrap;gap:7px}
+.preset-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:11px;padding:6px 13px;border-radius:5px;cursor:pointer;transition:all .18s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.preset-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,229,255,.07);transform:translateY(-1px)}
+.preset-vendor{color:var(--muted);font-size:10px}
 
 /* Filters */
-.filters-bar {
-padding: 24px 0;
-display: flex;
-gap: 16px;
-flex-wrap: wrap;
-align-items: flex-end;
-}
+.filters-bar{padding:16px 0 12px;display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.filter-group{display:flex;flex-direction:column;gap:6px}
+.filter-label{font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+select,input[type="text"]{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:13px;padding:10px 14px;border-radius:6px;outline:none;cursor:pointer;transition:border-color .2s,box-shadow .2s;min-width:180px}
+select:hover,input[type="text"]:hover{border-color:var(--accent)}
+select:focus,input[type="text"]:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,229,255,.15)}
+input[type="text"]::placeholder{color:var(--muted)}
+.version-input{min-width:130px;max-width:150px}
+.btn{background:var(--accent);color:#000;border:none;font-family:var(--font-mono);font-size:12px;font-weight:700;padding:10px 22px;border-radius:6px;cursor:pointer;text-transform:uppercase;letter-spacing:1px;transition:all .2s;white-space:nowrap;align-self:flex-end}
+.btn:hover{background:#fff;transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,229,255,.3)}
+.btn:active{transform:translateY(0)}
+.btn-outline{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.btn-outline:hover{background:rgba(0,229,255,.1);color:var(--accent)}
 
-.filter-group {
-display: flex;
-flex-direction: column;
-gap: 6px;
-}
+/* Search context badge */
+.search-context{display:none;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;color:var(--muted);padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;margin-bottom:14px;flex-wrap:wrap}
+.search-context.visible{display:flex}
+.ctx-tag{color:var(--accent);background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.25);padding:2px 8px;border-radius:3px;font-weight:700}
 
-.filter-label {
-font-family: var(–font-mono);
-font-size: 10px;
-color: var(–muted);
-text-transform: uppercase;
-letter-spacing: 1px;
-}
-
-select, input[type=“text”] {
-background: var(–surface2);
-border: 1px solid var(–border);
-color: var(–text);
-font-family: var(–font-mono);
-font-size: 13px;
-padding: 10px 14px;
-border-radius: 6px;
-outline: none;
-cursor: pointer;
-transition: border-color 0.2s, box-shadow 0.2s;
-min-width: 180px;
-}
-
-select:hover, input[type=“text”]:hover {
-border-color: var(–accent);
-}
-
-select:focus, input[type=“text”]:focus {
-border-color: var(–accent);
-box-shadow: 0 0 0 2px rgba(0,229,255,0.15);
-}
-
-.btn {
-background: var(–accent);
-color: #000;
-border: none;
-font-family: var(–font-mono);
-font-size: 12px;
-font-weight: 700;
-padding: 10px 22px;
-border-radius: 6px;
-cursor: pointer;
-text-transform: uppercase;
-letter-spacing: 1px;
-transition: all 0.2s;
-white-space: nowrap;
-align-self: flex-end;
-}
-
-.btn:hover {
-background: #fff;
-transform: translateY(-1px);
-box-shadow: 0 4px 20px rgba(0,229,255,0.3);
-}
-
-.btn:active { transform: translateY(0); }
-
-.btn-outline {
-background: transparent;
-color: var(–accent);
-border: 1px solid var(–accent);
-}
-
-.btn-outline:hover {
-background: rgba(0,229,255,0.1);
-color: var(–accent);
-}
-
-/* Stats bar */
-.stats-bar {
-display: grid;
-grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-gap: 12px;
-margin-bottom: 24px;
-}
-
-.stat-card {
-background: var(–surface);
-border: 1px solid var(–border);
-border-radius: 8px;
-padding: 16px 20px;
-position: relative;
-overflow: hidden;
-}
-
-.stat-card::before {
-content: ‘’;
-position: absolute;
-top: 0; left: 0; right: 0;
-height: 2px;
-}
-
-.stat-card.critical::before { background: var(–danger); }
-.stat-card.high::before { background: #ff7043; }
-.stat-card.medium::before { background: var(–warn); }
-.stat-card.zero-day::before { background: var(–accent); }
-
-.stat-value {
-font-family: var(–font-mono);
-font-size: 28px;
-font-weight: 700;
-line-height: 1;
-margin-bottom: 4px;
-}
-
-.stat-card.critical .stat-value { color: var(–danger); }
-.stat-card.high .stat-value { color: #ff7043; }
-.stat-card.medium .stat-value { color: var(–warn); }
-.stat-card.zero-day .stat-value { color: var(–accent); }
-
-.stat-label {
-font-size: 11px;
-color: var(–muted);
-text-transform: uppercase;
-letter-spacing: 0.8px;
-font-family: var(–font-mono);
-}
+/* Stats */
+.stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px 20px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-card.critical::before{background:var(--danger)}
+.stat-card.high::before{background:#ff7043}
+.stat-card.medium::before{background:var(--warn)}
+.stat-card.zero-day::before{background:var(--accent)}
+.stat-value{font-family:var(--font-mono);font-size:28px;font-weight:700;line-height:1;margin-bottom:4px}
+.stat-card.critical .stat-value{color:var(--danger)}
+.stat-card.high .stat-value{color:#ff7043}
+.stat-card.medium .stat-value{color:var(--warn)}
+.stat-card.zero-day .stat-value{color:var(--accent)}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-family:var(--font-mono)}
 
 /* Table */
-.table-wrapper {
-background: var(–surface);
-border: 1px solid var(–border);
-border-radius: 10px;
-overflow: hidden;
-margin-bottom: 40px;
-}
+.table-wrapper{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:40px}
+.table-header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--border);gap:12px;flex-wrap:wrap}
+.table-title{font-family:var(--font-mono);font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.toggle-group{display:flex;gap:4px}
+.toggle-btn{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:var(--font-mono);font-size:11px;padding:5px 12px;border-radius:4px;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.5px}
+.toggle-btn.active,.toggle-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,229,255,.07)}
+table{width:100%;border-collapse:collapse}
+thead th{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:12px 20px;text-align:left;background:var(--surface2);border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap}
+thead th:hover{color:var(--accent)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .15s;animation:row-in .3s ease backwards}
+@keyframes row-in{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+tbody tr:hover{background:rgba(0,229,255,.04)}
+tbody tr:last-child{border-bottom:none}
+td{padding:14px 20px;font-size:13px;vertical-align:middle}
+.cve-id{font-family:var(--font-mono);font-size:12px;color:var(--accent);font-weight:600;white-space:nowrap}
+.cve-id a{color:inherit;text-decoration:none}
+.cve-id a:hover{text-decoration:underline}
+.severity-badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:3px 10px;border-radius:3px;white-space:nowrap}
+.sev-CRITICAL{background:rgba(255,59,92,.15);color:var(--danger);border:1px solid rgba(255,59,92,.3)}
+.sev-HIGH{background:rgba(255,112,67,.15);color:#ff7043;border:1px solid rgba(255,112,67,.3)}
+.sev-MEDIUM{background:rgba(255,184,0,.15);color:var(--warn);border:1px solid rgba(255,184,0,.3)}
+.sev-LOW{background:rgba(0,214,143,.1);color:var(--ok);border:1px solid rgba(0,214,143,.25)}
+.sev-NONE,.sev-UNKNOWN{background:rgba(108,122,153,.1);color:var(--muted);border:1px solid var(--border)}
+.zero-day-flag{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--accent);background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.3);padding:2px 8px;border-radius:3px;text-transform:uppercase}
+.description-cell{max-width:400px;font-size:12px;color:#9aa3bf;line-height:1.5}
+.date-cell{font-family:var(--font-mono);font-size:11px;color:var(--muted);white-space:nowrap}
+.cvss-score{font-family:var(--font-mono);font-size:14px;font-weight:700}
 
-.table-header {
-display: flex;
-align-items: center;
-justify-content: space-between;
-padding: 16px 24px;
-border-bottom: 1px solid var(–border);
-gap: 12px;
-flex-wrap: wrap;
-}
-
-.table-title {
-font-family: var(–font-mono);
-font-size: 12px;
-color: var(–muted);
-text-transform: uppercase;
-letter-spacing: 1px;
-}
-
-.toggle-group {
-display: flex;
-gap: 4px;
-}
-
-.toggle-btn {
-background: transparent;
-border: 1px solid var(–border);
-color: var(–muted);
-font-family: var(–font-mono);
-font-size: 11px;
-padding: 5px 12px;
-border-radius: 4px;
-cursor: pointer;
-transition: all 0.15s;
-text-transform: uppercase;
-letter-spacing: 0.5px;
-}
-
-.toggle-btn.active, .toggle-btn:hover {
-border-color: var(–accent);
-color: var(–accent);
-background: rgba(0,229,255,0.07);
-}
-
-table {
-width: 100%;
-border-collapse: collapse;
-}
-
-thead th {
-font-family: var(–font-mono);
-font-size: 10px;
-text-transform: uppercase;
-letter-spacing: 1px;
-color: var(–muted);
-padding: 12px 20px;
-text-align: left;
-background: var(–surface2);
-border-bottom: 1px solid var(–border);
-cursor: pointer;
-user-select: none;
-white-space: nowrap;
-}
-
-thead th:hover { color: var(–accent); }
-
-tbody tr {
-border-bottom: 1px solid var(–border);
-transition: background 0.15s;
-animation: row-in 0.3s ease backwards;
-}
-
-@keyframes row-in {
-from { opacity: 0; transform: translateX(-8px); }
-to { opacity: 1; transform: translateX(0); }
-}
-
-tbody tr:hover { background: rgba(0,229,255,0.04); }
-tbody tr:last-child { border-bottom: none; }
-
-td {
-padding: 14px 20px;
-font-size: 13px;
-vertical-align: middle;
-}
-
-.cve-id {
-font-family: var(–font-mono);
-font-size: 12px;
-color: var(–accent);
-font-weight: 600;
-white-space: nowrap;
-}
-
-.cve-id a {
-color: inherit;
-text-decoration: none;
-}
-
-.cve-id a:hover { text-decoration: underline; }
-
-.severity-badge {
-display: inline-flex;
-align-items: center;
-gap: 5px;
-font-family: var(–font-mono);
-font-size: 10px;
-font-weight: 700;
-text-transform: uppercase;
-letter-spacing: 0.8px;
-padding: 3px 10px;
-border-radius: 3px;
-white-space: nowrap;
-}
-
-.sev-CRITICAL { background: rgba(255,59,92,0.15); color: var(–danger); border: 1px solid rgba(255,59,92,0.3); }
-.sev-HIGH     { background: rgba(255,112,67,0.15); color: #ff7043; border: 1px solid rgba(255,112,67,0.3); }
-.sev-MEDIUM   { background: rgba(255,184,0,0.15); color: var(–warn); border: 1px solid rgba(255,184,0,0.3); }
-.sev-LOW      { background: rgba(0,214,143,0.1); color: var(–ok); border: 1px solid rgba(0,214,143,0.25); }
-.sev-NONE     { background: rgba(108,122,153,0.1); color: var(–muted); border: 1px solid var(–border); }
-.sev-UNKNOWN  { background: rgba(108,122,153,0.1); color: var(–muted); border: 1px solid var(–border); }
-
-.zero-day-flag {
-display: inline-flex;
-align-items: center;
-gap: 4px;
-font-family: var(–font-mono);
-font-size: 10px;
-font-weight: 700;
-color: var(–accent);
-background: rgba(0,229,255,0.1);
-border: 1px solid rgba(0,229,255,0.3);
-padding: 2px 8px;
-border-radius: 3px;
-text-transform: uppercase;
-}
-
-.description-cell {
-max-width: 400px;
-font-size: 12px;
-color: #9aa3bf;
-line-height: 1.5;
-}
-
-.date-cell {
-font-family: var(–font-mono);
-font-size: 11px;
-color: var(–muted);
-white-space: nowrap;
-}
-
-.cvss-score {
-font-family: var(–font-mono);
-font-size: 14px;
-font-weight: 700;
-}
-
-/* State displays */
-.state-container {
-padding: 80px 24px;
-text-align: center;
-color: var(–muted);
-}
-
-.state-icon {
-font-size: 48px;
-margin-bottom: 16px;
-opacity: 0.5;
-}
-
-.state-title {
-font-size: 16px;
-font-weight: 600;
-margin-bottom: 8px;
-color: var(–text);
-}
-
-.state-subtitle {
-font-family: var(–font-mono);
-font-size: 12px;
-line-height: 1.6;
-}
-
-/* Loading spinner */
-.spinner {
-width: 36px;
-height: 36px;
-border: 3px solid var(–border);
-border-top-color: var(–accent);
-border-radius: 50%;
-animation: spin 0.7s linear infinite;
-margin: 0 auto 16px;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
+/* States */
+.state-container{padding:80px 24px;text-align:center;color:var(--muted)}
+.state-icon{font-size:48px;margin-bottom:16px;opacity:.5}
+.state-title{font-size:16px;font-weight:600;margin-bottom:8px;color:var(--text)}
+.state-subtitle{font-family:var(--font-mono);font-size:12px;line-height:1.6}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 /* Pagination */
-.pagination {
-display: flex;
-align-items: center;
-justify-content: space-between;
-padding: 14px 24px;
-border-top: 1px solid var(–border);
-background: var(–surface2);
-flex-wrap: wrap;
-gap: 12px;
-}
-
-.page-info {
-font-family: var(–font-mono);
-font-size: 11px;
-color: var(–muted);
-}
-
-.page-btns {
-display: flex;
-gap: 6px;
-}
-
-.page-btn {
-background: transparent;
-border: 1px solid var(–border);
-color: var(–text);
-font-family: var(–font-mono);
-font-size: 11px;
-padding: 5px 12px;
-border-radius: 4px;
-cursor: pointer;
-transition: all 0.15s;
-}
-
-.page-btn:hover, .page-btn.active {
-border-color: var(–accent);
-color: var(–accent);
-}
-
-.page-btn:disabled {
-opacity: 0.3;
-cursor: not-allowed;
-}
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-top:1px solid var(--border);background:var(--surface2);flex-wrap:wrap;gap:12px}
+.page-info{font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+.page-btns{display:flex;gap:6px}
+.page-btn{background:transparent;border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:11px;padding:5px 12px;border-radius:4px;cursor:pointer;transition:all .15s}
+.page-btn:hover,.page-btn.active{border-color:var(--accent);color:var(--accent)}
+.page-btn:disabled{opacity:.3;cursor:not-allowed}
 
 /* Footer */
-footer {
-border-top: 1px solid var(–border);
-padding: 20px 0;
-margin-top: 20px;
-}
-
-.footer-inner {
-display: flex;
-justify-content: space-between;
-align-items: center;
-flex-wrap: wrap;
-gap: 12px;
-}
-
-.footer-note {
-font-family: var(–font-mono);
-font-size: 11px;
-color: var(–muted);
-line-height: 1.6;
-}
+footer{border-top:1px solid var(--border);padding:20px 0;margin-top:20px}
+.footer-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.footer-note{font-family:var(--font-mono);font-size:11px;color:var(--muted);line-height:1.6}
 
 /* Responsive */
-@media (max-width: 768px) {
-.filters-bar { gap: 12px; }
-select, input[type=“text”] { min-width: 140px; font-size: 16px; /* prevent iOS zoom */ }
-td { padding: 10px 12px; }
-thead th { padding: 10px 12px; }
-.description-cell { display: none; }
-.btn { padding: 12px 18px; font-size: 13px; min-height: 44px; } /* Apple HIG touch target */
-.filter-group { width: calc(50% - 8px); }
-.filter-group select { width: 100%; min-width: unset; }
+@media(max-width:768px){
+  .filters-bar{gap:12px}
+  select,input[type="text"]{min-width:140px;font-size:16px}
+  td{padding:10px 12px}
+  thead th{padding:10px 12px}
+  .description-cell{display:none}
+  .btn{padding:12px 18px;font-size:13px;min-height:44px}
+  .filter-group{width:calc(50% - 8px)}
+  .filter-group select{width:100%;min-width:unset}
+  .version-input{min-width:unset;max-width:unset;width:100%}
+}
+@media(max-width:480px){
+  .container{padding:0 16px}
+  .logo-text{font-size:18px}
+  .header-meta{display:none}
+  .stat-value{font-size:22px}
+  .filters-bar{padding:16px 0}
+  .filter-group{width:100%}
+  .filter-group select{width:100%}
+  .btn{width:100%;justify-content:center}
+  .preset-btn{font-size:10px;padding:5px 9px}
 }
 
-@media (max-width: 480px) {
-.container { padding: 0 16px; }
-.logo-text { font-size: 18px; }
-.header-meta { display: none; }
-.stat-value { font-size: 22px; }
-.filters-bar { padding: 16px 0; }
-.filter-group { width: 100%; }
-.filter-group select { width: 100%; }
-.btn { width: 100%; justify-content: center; }
-}
-
-/* iOS install banner */
-#install-banner {
-display: none;
-position: fixed;
-bottom: calc(16px + env(safe-area-inset-bottom));
-left: 16px;
-right: 16px;
-background: var(–surface2);
-border: 1px solid var(–accent);
-border-radius: 12px;
-padding: 14px 16px;
-z-index: 999;
-box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-animation: slide-up 0.4s ease;
-}
-
-@keyframes slide-up {
-from { transform: translateY(20px); opacity: 0; }
-to   { transform: translateY(0);    opacity: 1; }
-}
-
-#install-banner.visible { display: flex; align-items: center; gap: 12px; }
-
-.install-icon { font-size: 28px; flex-shrink: 0; }
-
-.install-text { flex: 1; }
-
-.install-text strong {
-display: block;
-font-size: 13px;
-font-weight: 700;
-color: var(–text);
-margin-bottom: 2px;
-}
-
-.install-text span {
-font-family: var(–font-mono);
-font-size: 11px;
-color: var(–muted);
-line-height: 1.4;
-}
-
-.install-close {
-background: none;
-border: none;
-color: var(–muted);
-font-size: 18px;
-cursor: pointer;
-padding: 4px;
-flex-shrink: 0;
-}
+/* iOS Banner */
+#install-banner{display:none;position:fixed;bottom:calc(16px + env(safe-area-inset-bottom));left:16px;right:16px;background:var(--surface2);border:1px solid var(--accent);border-radius:12px;padding:14px 16px;z-index:999;box-shadow:0 8px 32px rgba(0,0,0,.5);animation:slide-up .4s ease}
+@keyframes slide-up{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+#install-banner.visible{display:flex;align-items:center;gap:12px}
+.install-icon{font-size:28px;flex-shrink:0}
+.install-text{flex:1}
+.install-text strong{display:block;font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px}
+.install-text span{font-family:var(--font-mono);font-size:11px;color:var(--muted);line-height:1.4}
+.install-close{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px;flex-shrink:0}
 </style>
-
 </head>
 <body>
 
@@ -635,9 +165,7 @@ flex-shrink: 0;
     <div class="header-inner">
       <div class="logo">
         <div class="logo-icon">⬡</div>
-        <div>
-          <div class="logo-text">Vuln<span>Watch</span></div>
-        </div>
+        <div><div class="logo-text">Vuln<span>Watch</span></div></div>
       </div>
       <div class="header-meta">
         <div><span class="live-dot"></span>Live data via NVD / NIST</div>
@@ -649,29 +177,77 @@ flex-shrink: 0;
 
 <div class="container">
 
+  <!-- Quick Search Presets -->
+  <div class="presets-section">
+    <div class="presets-label">⚡ Quick Search — Common Devices &amp; Platforms</div>
+    <div class="presets-grid">
+      <button class="preset-btn" onclick="applyPreset('cisco','cisco firepower threat defense','','')">🔥 Firepower FTD <span class="preset-vendor">Cisco</span></button>
+      <button class="preset-btn" onclick="applyPreset('cisco','cisco firepower 4100','','')">🔥 Firepower 4100 <span class="preset-vendor">Cisco</span></button>
+      <button class="preset-btn" onclick="applyPreset('cisco','cisco firepower 4112','','')">🔥 Firepower 4112 <span class="preset-vendor">Cisco</span></button>
+      <button class="preset-btn" onclick="applyPreset('cisco','cisco firepower management center','','')">🔥 FMC <span class="preset-vendor">Cisco</span></button>
+      <button class="preset-btn" onclick="applyPreset('cisco','cisco asa','','')">🛡️ ASA <span class="preset-vendor">Cisco</span></button>
+      <button class="preset-btn" onclick="applyPreset('cisco','cisco ios xe','','')">📡 IOS XE <span class="preset-vendor">Cisco</span></button>
+      <button class="preset-btn" onclick="applyPreset('cisco','cisco anyconnect','','')">🔑 AnyConnect <span class="preset-vendor">Cisco</span></button>
+      <button class="preset-btn" onclick="applyPreset('palo_alto','palo alto pan-os','','')">🔒 PAN-OS <span class="preset-vendor">Palo Alto</span></button>
+      <button class="preset-btn" onclick="applyPreset('palo_alto','palo alto globalprotect','','')">🌐 GlobalProtect <span class="preset-vendor">Palo Alto</span></button>
+      <button class="preset-btn" onclick="applyPreset('fortinet','fortinet fortios','','')">🏰 FortiOS <span class="preset-vendor">Fortinet</span></button>
+      <button class="preset-btn" onclick="applyPreset('fortinet','fortinet fortigate','','')">🏰 FortiGate <span class="preset-vendor">Fortinet</span></button>
+      <button class="preset-btn" onclick="applyPreset('ivanti','ivanti connect secure','','CRITICAL')">⚠️ Connect Secure <span class="preset-vendor">Ivanti · Critical</span></button>
+      <button class="preset-btn" onclick="applyPreset('microsoft','microsoft windows 11','','')">🪟 Windows 11 <span class="preset-vendor">Microsoft</span></button>
+      <button class="preset-btn" onclick="applyPreset('microsoft','microsoft windows server 2022','','')">🪟 Server 2022 <span class="preset-vendor">Microsoft</span></button>
+      <button class="preset-btn" onclick="applyPreset('microsoft','microsoft windows server 2019','','')">🪟 Server 2019 <span class="preset-vendor">Microsoft</span></button>
+      <button class="preset-btn" onclick="applyPreset('redhat','red hat enterprise linux','','')">🐧 RHEL <span class="preset-vendor">Red Hat</span></button>
+      <button class="preset-btn" onclick="applyPreset('redhat','red hat enterprise linux 9','','')">🐧 RHEL 9 <span class="preset-vendor">Red Hat</span></button>
+      <button class="preset-btn" onclick="applyPreset('linux','linux linux kernel','','CRITICAL')">🐧 Linux Kernel <span class="preset-vendor">Critical</span></button>
+      <button class="preset-btn" onclick="applyPreset('ubuntu','canonical ubuntu','','')">🐧 Ubuntu <span class="preset-vendor">Canonical</span></button>
+      <button class="preset-btn" onclick="applyPreset('f5','f5 big-ip','','')">⚖️ BIG-IP <span class="preset-vendor">F5</span></button>
+      <button class="preset-btn" onclick="applyPreset('citrix','citrix netscaler','','')">🖥️ NetScaler <span class="preset-vendor">Citrix</span></button>
+      <button class="preset-btn" onclick="applyPreset('checkpoint','check point gaia','','')">✅ Gaia OS <span class="preset-vendor">Check Point</span></button>
+    </div>
+  </div>
+
+  <!-- Filters -->
   <div class="filters-bar">
     <div class="filter-group">
       <div class="filter-label">Vendor</div>
       <select id="vendor-select" onchange="onVendorChange()">
         <option value="">— All Vendors —</option>
-        <option value="cisco">Cisco</option>
-        <option value="palo_alto">Palo Alto Networks</option>
-        <option value="fortinet">Fortinet</option>
-        <option value="checkpoint">Check Point</option>
-        <option value="juniper">Juniper Networks</option>
-        <option value="microsoft">Microsoft</option>
-        <option value="vmware">VMware</option>
-        <option value="f5">F5 Networks</option>
-        <option value="citrix">Citrix</option>
-        <option value="ivanti">Ivanti</option>
+        <optgroup label="── Network Security ──">
+          <option value="cisco">Cisco</option>
+          <option value="palo_alto">Palo Alto Networks</option>
+          <option value="fortinet">Fortinet</option>
+          <option value="checkpoint">Check Point</option>
+          <option value="juniper">Juniper Networks</option>
+          <option value="f5">F5 Networks</option>
+          <option value="citrix">Citrix</option>
+          <option value="ivanti">Ivanti</option>
+        </optgroup>
+        <optgroup label="── Operating Systems ──">
+          <option value="microsoft">Microsoft (Windows)</option>
+          <option value="redhat">Red Hat (RHEL)</option>
+          <option value="linux">Linux Kernel</option>
+          <option value="ubuntu">Ubuntu / Canonical</option>
+          <option value="debian">Debian</option>
+          <option value="suse">SUSE Linux</option>
+        </optgroup>
+        <optgroup label="── Infrastructure ──">
+          <option value="vmware">VMware / Broadcom</option>
+        </optgroup>
       </select>
     </div>
+
     <div class="filter-group">
       <div class="filter-label">Product / Solution</div>
       <select id="product-select">
         <option value="">— Select Vendor First —</option>
       </select>
     </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Version (optional)</div>
+      <input type="text" id="version-input" class="version-input" placeholder="e.g. 7.6.4" title="Specific version to narrow results">
+    </div>
+
     <div class="filter-group">
       <div class="filter-label">Severity</div>
       <select id="severity-select">
@@ -682,34 +258,27 @@ flex-shrink: 0;
         <option value="LOW">Low</option>
       </select>
     </div>
+
     <div class="filter-group">
-      <div class="filter-label">Zero-Day / KEV Only</div>
+      <div class="filter-label">Zero-Day / KEV</div>
       <select id="zerod-select">
         <option value="">All CVEs</option>
         <option value="kev">Known Exploited (KEV)</option>
       </select>
     </div>
+
     <button class="btn" onclick="runSearch()">⟳ Fetch CVEs</button>
     <button class="btn btn-outline" onclick="clearResults()">Clear</button>
   </div>
 
+  <!-- Active search badge -->
+  <div class="search-context" id="search-context"></div>
+
   <div class="stats-bar" id="stats-bar" style="display:none">
-    <div class="stat-card critical">
-      <div class="stat-value" id="stat-critical">0</div>
-      <div class="stat-label">Critical</div>
-    </div>
-    <div class="stat-card high">
-      <div class="stat-value" id="stat-high">0</div>
-      <div class="stat-label">High</div>
-    </div>
-    <div class="stat-card medium">
-      <div class="stat-value" id="stat-medium">0</div>
-      <div class="stat-label">Medium</div>
-    </div>
-    <div class="stat-card zero-day">
-      <div class="stat-value" id="stat-zerod">0</div>
-      <div class="stat-label">Zero-Day / KEV</div>
-    </div>
+    <div class="stat-card critical"><div class="stat-value" id="stat-critical">0</div><div class="stat-label">Critical</div></div>
+    <div class="stat-card high"><div class="stat-value" id="stat-high">0</div><div class="stat-label">High</div></div>
+    <div class="stat-card medium"><div class="stat-value" id="stat-medium">0</div><div class="stat-label">Medium</div></div>
+    <div class="stat-card zero-day"><div class="stat-value" id="stat-zerod">0</div><div class="stat-label">Zero-Day / KEV</div></div>
   </div>
 
   <div class="table-wrapper">
@@ -722,25 +291,29 @@ flex-shrink: 0;
         <button class="toggle-btn" onclick="setDisplayFilter('kev',this)">⚡ KEV</button>
       </div>
     </div>
-
-```
-<div id="vuln-body">
-  <div class="state-container">
-    <div class="state-icon">🛡️</div>
-    <div class="state-title">Select a vendor and product to begin</div>
-    <div class="state-subtitle">
-      Data sourced live from NIST National Vulnerability Database (NVD)<br>
-      Supports filtering by vendor, product, severity, and CISA KEV status
+    <div id="vuln-body">
+      <div class="state-container">
+        <div class="state-icon">🛡️</div>
+        <div class="state-title">Select a vendor and product to begin</div>
+        <div class="state-subtitle">
+          Use the Quick Search presets above, or manually select vendor + product.<br>
+          Optionally add a <strong style="color:var(--accent)">version number</strong> (e.g. 7.6.4) to narrow results.<br>
+          Data sourced live from NIST National Vulnerability Database (NVD)
+        </div>
+      </div>
     </div>
   </div>
-</div>
-```
 
+</div>
+
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-note">Data source: <strong>NIST NVD</strong> — nvd.nist.gov &nbsp;|&nbsp; KEV: CISA Known Exploited Vulnerabilities Catalog<br>This tool queries the public NVD API. No data is stored locally.</div>
+      <div class="footer-note" style="text-align:right">Results are paginated — max 20 per page<br>CVSS scores shown are v3.1 where available</div>
+    </div>
   </div>
-
-</div>
-
-<!-- iOS PWA Install Banner -->
+</footer>
 
 <div id="install-banner">
   <div class="install-icon">📲</div>
@@ -751,503 +324,364 @@ flex-shrink: 0;
   <button class="install-close" onclick="dismissBanner()" aria-label="Dismiss">✕</button>
 </div>
 
-  <div class="container">
-    <div class="footer-inner">
-      <div class="footer-note">
-        Data source: <strong>NIST NVD</strong> — nvd.nist.gov &nbsp;|&nbsp; KEV: CISA Known Exploited Vulnerabilities Catalog<br>
-        This tool queries the public NVD API. No data is stored locally.
-      </div>
-      <div class="footer-note" style="text-align:right">
-        Results are paginated — max 20 per page<br>
-        CVSS scores shown are v3.1 where available
-      </div>
-    </div>
-  </div>
-</footer>
-
 <script>
-// ─── Vendor → Products map ───────────────────────────────────────────────────
 const VENDOR_PRODUCTS = {
-  cisco: {
-    label: "Cisco",
-    keyword: "cisco",
-    products: [
-      { label: "— All Cisco —", value: "cisco" },
-      { label: "Firepower / FTD", value: "cisco firepower threat defense" },
-      { label: "ASA (Adaptive Security Appliance)", value: "cisco asa" },
-      { label: "IOS XE", value: "cisco ios xe" },
-      { label: "IOS XR", value: "cisco ios xr" },
-      { label: "Umbrella", value: "cisco umbrella" },
-      { label: "AnyConnect", value: "cisco anyconnect" },
-      { label: "Secure Endpoint (AMP)", value: "cisco secure endpoint" },
-      { label: "NX-OS", value: "cisco nx-os" },
-      { label: "WebEx", value: "cisco webex" },
-      { label: "ISE (Identity Services Engine)", value: "cisco identity services engine" },
-    ]
-  },
-  palo_alto: {
-    label: "Palo Alto Networks",
-    keyword: "palo alto",
-    products: [
-      { label: "— All Palo Alto —", value: "palo alto networks" },
-      { label: "PAN-OS (Firewalls)", value: "palo alto pan-os" },
-      { label: "Prisma Access", value: "palo alto prisma access" },
-      { label: "Prisma Cloud", value: "palo alto prisma cloud" },
-      { label: "Cortex XDR", value: "palo alto cortex xdr" },
-      { label: "GlobalProtect", value: "palo alto globalprotect" },
-      { label: "Panorama", value: "palo alto panorama" },
-      { label: "WildFire", value: "palo alto wildfire" },
-    ]
-  },
-  fortinet: {
-    label: "Fortinet",
-    keyword: "fortinet",
-    products: [
-      { label: "— All Fortinet —", value: "fortinet" },
-      { label: "FortiOS", value: "fortinet fortios" },
-      { label: "FortiGate", value: "fortinet fortigate" },
-      { label: "FortiAnalyzer", value: "fortinet fortianalyzer" },
-      { label: "FortiManager", value: "fortinet fortimanager" },
-      { label: "FortiClient", value: "fortinet forticlient" },
-      { label: "FortiWeb", value: "fortinet fortiweb" },
-      { label: "FortiProxy", value: "fortinet fortiproxy" },
-    ]
-  },
-  checkpoint: {
-    label: "Check Point",
-    keyword: "check point",
-    products: [
-      { label: "— All Check Point —", value: "check point" },
-      { label: "Gaia OS", value: "check point gaia" },
-      { label: "CloudGuard", value: "check point cloudguard" },
-      { label: "Harmony Endpoint", value: "check point harmony endpoint" },
-      { label: "SmartConsole", value: "check point smartconsole" },
-    ]
-  },
-  juniper: {
-    label: "Juniper Networks",
-    keyword: "juniper",
-    products: [
-      { label: "— All Juniper —", value: "juniper networks" },
-      { label: "Junos OS", value: "juniper junos" },
-      { label: "SRX Series", value: "juniper srx" },
-      { label: "EX Series", value: "juniper ex series" },
-      { label: "Mist", value: "juniper mist" },
-    ]
-  },
-  microsoft: {
-    label: "Microsoft",
-    keyword: "microsoft",
-    products: [
-      { label: "— All Microsoft —", value: "microsoft" },
-      { label: "Windows Server", value: "microsoft windows server" },
-      { label: "Windows 10/11", value: "microsoft windows 10" },
-      { label: "Azure", value: "microsoft azure" },
-      { label: "Exchange Server", value: "microsoft exchange server" },
-      { label: "SharePoint", value: "microsoft sharepoint" },
-      { label: "Teams", value: "microsoft teams" },
-      { label: "Office / 365", value: "microsoft office 365" },
-    ]
-  },
-  vmware: {
-    label: "VMware / Broadcom",
-    keyword: "vmware",
-    products: [
-      { label: "— All VMware —", value: "vmware" },
-      { label: "vSphere / ESXi", value: "vmware esxi" },
-      { label: "vCenter Server", value: "vmware vcenter" },
-      { label: "NSX", value: "vmware nsx" },
-      { label: "Horizon", value: "vmware horizon" },
-      { label: "Workspace ONE", value: "vmware workspace one" },
-    ]
-  },
-  f5: {
-    label: "F5 Networks",
-    keyword: "f5",
-    products: [
-      { label: "— All F5 —", value: "f5 networks" },
-      { label: "BIG-IP", value: "f5 big-ip" },
-      { label: "NGINX", value: "f5 nginx" },
-      { label: "BIG-IQ", value: "f5 big-iq" },
-    ]
-  },
-  citrix: {
-    label: "Citrix",
-    keyword: "citrix",
-    products: [
-      { label: "— All Citrix —", value: "citrix" },
-      { label: "NetScaler / ADC", value: "citrix netscaler" },
-      { label: "Virtual Apps & Desktops", value: "citrix virtual apps" },
-      { label: "Gateway", value: "citrix gateway" },
-    ]
-  },
-  ivanti: {
-    label: "Ivanti",
-    keyword: "ivanti",
-    products: [
-      { label: "— All Ivanti —", value: "ivanti" },
-      { label: "Connect Secure (Pulse)", value: "ivanti connect secure" },
-      { label: "Policy Secure", value: "ivanti policy secure" },
-      { label: "Endpoint Manager", value: "ivanti endpoint manager" },
-      { label: "EPMM (MobileIron)", value: "ivanti epmm" },
-    ]
-  },
+  cisco:{label:"Cisco",keyword:"cisco",products:[
+    {label:"— All Cisco —",value:"cisco"},
+    {label:"Firepower FTD",value:"cisco firepower threat defense"},
+    {label:"Firepower 4100 Series",value:"cisco firepower 4100"},
+    {label:"Firepower 4110",value:"cisco firepower 4110"},
+    {label:"Firepower 4112",value:"cisco firepower 4112"},
+    {label:"Firepower 4115",value:"cisco firepower 4115"},
+    {label:"Firepower 4120",value:"cisco firepower 4120"},
+    {label:"Firepower 4140",value:"cisco firepower 4140"},
+    {label:"Firepower 4150",value:"cisco firepower 4150"},
+    {label:"Firepower 9300",value:"cisco firepower 9300"},
+    {label:"Firepower Management Center (FMC)",value:"cisco firepower management center"},
+    {label:"ASA (Adaptive Security Appliance)",value:"cisco asa"},
+    {label:"IOS XE",value:"cisco ios xe"},
+    {label:"IOS XR",value:"cisco ios xr"},
+    {label:"NX-OS",value:"cisco nx-os"},
+    {label:"Umbrella",value:"cisco umbrella"},
+    {label:"AnyConnect / Secure Client",value:"cisco anyconnect"},
+    {label:"Secure Endpoint (AMP)",value:"cisco secure endpoint"},
+    {label:"WebEx",value:"cisco webex"},
+    {label:"ISE (Identity Services Engine)",value:"cisco identity services engine"},
+  ]},
+  palo_alto:{label:"Palo Alto Networks",keyword:"palo alto",products:[
+    {label:"— All Palo Alto —",value:"palo alto networks"},
+    {label:"PAN-OS (Firewalls)",value:"palo alto pan-os"},
+    {label:"Prisma Access",value:"palo alto prisma access"},
+    {label:"Prisma Cloud",value:"palo alto prisma cloud"},
+    {label:"Cortex XDR",value:"palo alto cortex xdr"},
+    {label:"GlobalProtect",value:"palo alto globalprotect"},
+    {label:"Panorama",value:"palo alto panorama"},
+    {label:"WildFire",value:"palo alto wildfire"},
+  ]},
+  fortinet:{label:"Fortinet",keyword:"fortinet",products:[
+    {label:"— All Fortinet —",value:"fortinet"},
+    {label:"FortiOS",value:"fortinet fortios"},
+    {label:"FortiGate",value:"fortinet fortigate"},
+    {label:"FortiAnalyzer",value:"fortinet fortianalyzer"},
+    {label:"FortiManager",value:"fortinet fortimanager"},
+    {label:"FortiClient",value:"fortinet forticlient"},
+    {label:"FortiWeb",value:"fortinet fortiweb"},
+    {label:"FortiProxy",value:"fortinet fortiproxy"},
+  ]},
+  checkpoint:{label:"Check Point",keyword:"check point",products:[
+    {label:"— All Check Point —",value:"check point"},
+    {label:"Gaia OS",value:"check point gaia"},
+    {label:"CloudGuard",value:"check point cloudguard"},
+    {label:"Harmony Endpoint",value:"check point harmony endpoint"},
+    {label:"SmartConsole",value:"check point smartconsole"},
+  ]},
+  juniper:{label:"Juniper Networks",keyword:"juniper",products:[
+    {label:"— All Juniper —",value:"juniper networks"},
+    {label:"Junos OS",value:"juniper junos"},
+    {label:"SRX Series",value:"juniper srx"},
+    {label:"EX Series",value:"juniper ex series"},
+    {label:"Mist",value:"juniper mist"},
+  ]},
+  microsoft:{label:"Microsoft (Windows)",keyword:"microsoft",products:[
+    {label:"— All Microsoft —",value:"microsoft"},
+    {label:"Windows 11",value:"microsoft windows 11"},
+    {label:"Windows 10",value:"microsoft windows 10"},
+    {label:"Windows Server 2025",value:"microsoft windows server 2025"},
+    {label:"Windows Server 2022",value:"microsoft windows server 2022"},
+    {label:"Windows Server 2019",value:"microsoft windows server 2019"},
+    {label:"Windows Server 2016",value:"microsoft windows server 2016"},
+    {label:"Windows Server (all)",value:"microsoft windows server"},
+    {label:"Azure",value:"microsoft azure"},
+    {label:"Exchange Server",value:"microsoft exchange server"},
+    {label:"SharePoint",value:"microsoft sharepoint"},
+    {label:"Teams",value:"microsoft teams"},
+    {label:"Office / 365",value:"microsoft office 365"},
+    {label:"Defender for Endpoint",value:"microsoft defender for endpoint"},
+    {label:"Active Directory / AD DS",value:"microsoft active directory"},
+    {label:"RDP / Remote Desktop",value:"microsoft remote desktop"},
+  ]},
+  redhat:{label:"Red Hat",keyword:"red hat",products:[
+    {label:"— All Red Hat —",value:"red hat"},
+    {label:"RHEL 9",value:"red hat enterprise linux 9"},
+    {label:"RHEL 8",value:"red hat enterprise linux 8"},
+    {label:"RHEL 7",value:"red hat enterprise linux 7"},
+    {label:"RHEL (all versions)",value:"red hat enterprise linux"},
+    {label:"OpenShift",value:"red hat openshift"},
+    {label:"OpenShift Container Platform",value:"red hat openshift container platform"},
+    {label:"Ansible Automation Platform",value:"red hat ansible"},
+    {label:"JBoss / WildFly",value:"red hat jboss"},
+    {label:"Satellite",value:"red hat satellite"},
+  ]},
+  linux:{label:"Linux Kernel",keyword:"linux kernel",products:[
+    {label:"— Linux Kernel —",value:"linux linux kernel"},
+  ]},
+  ubuntu:{label:"Ubuntu / Canonical",keyword:"ubuntu",products:[
+    {label:"— All Ubuntu —",value:"ubuntu"},
+    {label:"Ubuntu 24.04 LTS",value:"ubuntu 24.04"},
+    {label:"Ubuntu 22.04 LTS",value:"ubuntu 22.04"},
+    {label:"Ubuntu 20.04 LTS",value:"ubuntu 20.04"},
+    {label:"Ubuntu Server (all)",value:"canonical ubuntu"},
+  ]},
+  debian:{label:"Debian",keyword:"debian",products:[
+    {label:"— All Debian —",value:"debian"},
+    {label:"Debian 12 (Bookworm)",value:"debian 12"},
+    {label:"Debian 11 (Bullseye)",value:"debian 11"},
+  ]},
+  suse:{label:"SUSE Linux",keyword:"suse",products:[
+    {label:"— All SUSE —",value:"suse"},
+    {label:"SLES (Enterprise)",value:"suse linux enterprise server"},
+    {label:"openSUSE Leap",value:"opensuse leap"},
+  ]},
+  vmware:{label:"VMware / Broadcom",keyword:"vmware",products:[
+    {label:"— All VMware —",value:"vmware"},
+    {label:"vSphere / ESXi",value:"vmware esxi"},
+    {label:"vCenter Server",value:"vmware vcenter"},
+    {label:"NSX",value:"vmware nsx"},
+    {label:"Horizon",value:"vmware horizon"},
+    {label:"Workspace ONE",value:"vmware workspace one"},
+  ]},
+  f5:{label:"F5 Networks",keyword:"f5",products:[
+    {label:"— All F5 —",value:"f5 networks"},
+    {label:"BIG-IP",value:"f5 big-ip"},
+    {label:"NGINX",value:"f5 nginx"},
+    {label:"BIG-IQ",value:"f5 big-iq"},
+  ]},
+  citrix:{label:"Citrix",keyword:"citrix",products:[
+    {label:"— All Citrix —",value:"citrix"},
+    {label:"NetScaler / ADC",value:"citrix netscaler"},
+    {label:"Virtual Apps & Desktops",value:"citrix virtual apps"},
+    {label:"Gateway",value:"citrix gateway"},
+  ]},
+  ivanti:{label:"Ivanti",keyword:"ivanti",products:[
+    {label:"— All Ivanti —",value:"ivanti"},
+    {label:"Connect Secure (Pulse)",value:"ivanti connect secure"},
+    {label:"Policy Secure",value:"ivanti policy secure"},
+    {label:"Endpoint Manager",value:"ivanti endpoint manager"},
+    {label:"EPMM (MobileIron)",value:"ivanti epmm"},
+  ]},
 };
 
-// ─── State ───────────────────────────────────────────────────────────────────
-let allResults = [];
-let displayFilter = 'all';
-let kevSet = new Set();
-let currentPage = 0;
-const PAGE_SIZE = 20;
+let allResults=[],displayFilter='all',kevSet=new Set(),currentPage=0;
+const PAGE_SIZE=20;
 
-// ─── Vendor change → update product dropdown ─────────────────────────────────
-function onVendorChange() {
-  const vendorKey = document.getElementById('vendor-select').value;
-  const productSel = document.getElementById('product-select');
-  productSel.innerHTML = '';
+function applyPreset(vendorKey,productValue,version,severity){
+  const vs=document.getElementById('vendor-select');
+  vs.value=vendorKey;
+  onVendorChange();
+  const ps=document.getElementById('product-select');
+  const match=Array.from(ps.options).find(o=>o.value===productValue);
+  if(match)ps.value=productValue;
+  document.getElementById('version-input').value=version||'';
+  document.getElementById('severity-select').value=severity||'';
+  runSearch();
+  setTimeout(()=>document.querySelector('.table-wrapper').scrollIntoView({behavior:'smooth',block:'start'}),400);
+}
 
-  if (!vendorKey || !VENDOR_PRODUCTS[vendorKey]) {
-    productSel.innerHTML = '<option value="">— Select Vendor First —</option>';
-    return;
-  }
-
-  VENDOR_PRODUCTS[vendorKey].products.forEach(p => {
-    const opt = document.createElement('option');
-    opt.value = p.value;
-    opt.textContent = p.label;
-    productSel.appendChild(opt);
+function onVendorChange(){
+  const vk=document.getElementById('vendor-select').value;
+  const ps=document.getElementById('product-select');
+  ps.innerHTML='';
+  if(!vk||!VENDOR_PRODUCTS[vk]){ps.innerHTML='<option value="">— Select Vendor First —</option>';return;}
+  VENDOR_PRODUCTS[vk].products.forEach(p=>{
+    const o=document.createElement('option');
+    o.value=p.value;o.textContent=p.label;ps.appendChild(o);
   });
 }
 
-// ─── Main search ─────────────────────────────────────────────────────────────
-async function runSearch() {
-  const productVal = document.getElementById('product-select').value;
-  const vendorKey  = document.getElementById('vendor-select').value;
-  const severity   = document.getElementById('severity-select').value;
-  const zeroD      = document.getElementById('zerod-select').value;
+async function runSearch(){
+  const productVal=document.getElementById('product-select').value;
+  const vendorKey=document.getElementById('vendor-select').value;
+  const severity=document.getElementById('severity-select').value;
+  const zeroD=document.getElementById('zerod-select').value;
+  const version=document.getElementById('version-input').value.trim();
 
-  if (!vendorKey && !productVal) {
-    showError('Please select a vendor first.');
-    return;
-  }
+  if(!vendorKey&&!productVal){showError('Please select a vendor first.');return;}
 
-  const keyword = productVal || (VENDOR_PRODUCTS[vendorKey]?.keyword || vendorKey);
+  let keyword=productVal||(VENDOR_PRODUCTS[vendorKey]?.keyword||vendorKey);
+  if(version)keyword=keyword+' '+version;
+
   showLoading();
 
-  try {
-    // Optional: load CISA KEV list in parallel
-    if (kevSet.size === 0) {
-      try {
-        const kevResp = await fetch('https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json');
-        if (kevResp.ok) {
-          const kevData = await kevResp.json();
-          kevSet = new Set(kevData.vulnerabilities.map(v => v.cveID));
-        }
-      } catch (e) { /* KEV optional */ }
+  // Search context badge
+  const ctxEl=document.getElementById('search-context');
+  const vLabel=VENDOR_PRODUCTS[vendorKey]?.label||vendorKey;
+  const pLabel=document.getElementById('product-select').selectedOptions[0]?.text||productVal;
+  let ctxHtml=`<span style="color:var(--muted)">Searching:</span>
+    <span class="ctx-tag">${escHtml(vLabel)}</span>
+    <span class="ctx-tag">${escHtml(pLabel)}</span>`;
+  if(version)ctxHtml+=` <span class="ctx-tag">v${escHtml(version)}</span>`;
+  if(severity)ctxHtml+=` <span class="ctx-tag">${escHtml(severity)}</span>`;
+  ctxEl.innerHTML=ctxHtml;ctxEl.classList.add('visible');
+
+  try{
+    if(kevSet.size===0){
+      try{
+        const kr=await fetch('https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json');
+        if(kr.ok){const kd=await kr.json();kevSet=new Set(kd.vulnerabilities.map(v=>v.cveID));}
+      }catch(e){}
     }
 
-    const params = new URLSearchParams({
-      keywordSearch: keyword,
-      resultsPerPage: 100,
-      startIndex: 0,
-    });
+    const params=new URLSearchParams({keywordSearch:keyword,resultsPerPage:100,startIndex:0});
+    if(severity)params.set('cvssV3Severity',severity);
+    if(zeroD==='kev')params.set('isKevCveOnly','true');
 
-    if (severity) {
-      params.set('cvssV3Severity', severity);
-    }
-
-    if (zeroD === 'kev') {
-      params.set('isKevCveOnly', 'true');
-    }
-
-    const url = `https://services.nvd.nist.gov/rest/json/cves/2.0?${params}`;
-    const resp = await fetch(url);
-
-    if (!resp.ok) throw new Error(`NVD API returned ${resp.status}`);
-
-    const data = await resp.json();
-    allResults = data.vulnerabilities || [];
-    currentPage = 0;
-    displayFilter = 'all';
-
-    // Reset toggle buttons
-    document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    const resp=await fetch(`https://services.nvd.nist.gov/rest/json/cves/2.0?${params}`);
+    if(!resp.ok)throw new Error(`NVD API returned ${resp.status}`);
+    const data=await resp.json();
+    allResults=data.vulnerabilities||[];
+    currentPage=0;displayFilter='all';
+    document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));
     document.querySelector('.toggle-btn').classList.add('active');
-
-    renderResults();
-    updateStats();
-
-    const now = new Date();
-    document.getElementById('last-updated').textContent =
-      `Updated: ${now.toLocaleTimeString()} — ${data.totalResults ?? allResults.length} CVEs found`;
-
-  } catch (err) {
+    renderResults();updateStats();
+    const now=new Date();
+    document.getElementById('last-updated').textContent=`Updated: ${now.toLocaleTimeString()} — ${data.totalResults??allResults.length} CVEs found`;
+  }catch(err){
     showError(`Failed to fetch data: ${err.message}\n\nNote: NVD API has rate limits. Wait 30s and retry.`);
   }
 }
 
-// ─── Render table ────────────────────────────────────────────────────────────
-function getFilteredResults() {
-  if (displayFilter === 'all') return allResults;
-  if (displayFilter === 'kev') return allResults.filter(v => kevSet.has(v.cve.id));
-  return allResults.filter(v => getSeverity(v) === displayFilter);
+function getFilteredResults(){
+  if(displayFilter==='all')return allResults;
+  if(displayFilter==='kev')return allResults.filter(v=>kevSet.has(v.cve.id));
+  return allResults.filter(v=>getSeverity(v)===displayFilter);
 }
 
-function renderResults() {
-  const filtered = getFilteredResults();
-  const total = filtered.length;
-  const start = currentPage * PAGE_SIZE;
-  const pageItems = filtered.slice(start, start + PAGE_SIZE);
+function renderResults(){
+  const filtered=getFilteredResults(),total=filtered.length;
+  const start=currentPage*PAGE_SIZE,pageItems=filtered.slice(start,start+PAGE_SIZE);
+  const body=document.getElementById('vuln-body');
+  const statsBar=document.getElementById('stats-bar');
+  const filterToggles=document.getElementById('filter-toggles');
 
-  const body = document.getElementById('vuln-body');
-  const statsBar = document.getElementById('stats-bar');
-  const filterToggles = document.getElementById('filter-toggles');
-
-  if (total === 0) {
-    body.innerHTML = `
-      <div class="state-container">
-        <div class="state-icon">🔍</div>
-        <div class="state-title">No CVEs found</div>
-        <div class="state-subtitle">Try adjusting your filters or selecting a different product.</div>
-      </div>`;
-    statsBar.style.display = 'none';
-    filterToggles.style.display = 'none';
-    document.getElementById('table-title').textContent = 'Results';
-    return;
+  if(total===0){
+    body.innerHTML=`<div class="state-container"><div class="state-icon">🔍</div><div class="state-title">No CVEs found</div><div class="state-subtitle">Try adjusting filters or removing the version number for broader results.</div></div>`;
+    statsBar.style.display='none';filterToggles.style.display='none';
+    document.getElementById('table-title').textContent='Results';return;
   }
 
-  statsBar.style.display = 'grid';
-  filterToggles.style.display = 'flex';
-  document.getElementById('table-title').textContent =
-    `${total} vulnerabilities found (showing ${start + 1}–${Math.min(start + PAGE_SIZE, total)})`;
+  statsBar.style.display='grid';filterToggles.style.display='flex';
+  document.getElementById('table-title').textContent=`${total} vulnerabilities found (showing ${start+1}–${Math.min(start+PAGE_SIZE,total)})`;
 
-  let html = `
-    <table>
-      <thead>
-        <tr>
-          <th>CVE ID</th>
-          <th>Severity</th>
-          <th>CVSS</th>
-          <th>Description</th>
-          <th>Published</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>`;
+  let html=`<table><thead><tr><th>CVE ID</th><th>Severity</th><th>CVSS</th><th>Description</th><th>Published</th><th>Status</th></tr></thead><tbody>`;
 
-  pageItems.forEach((item, i) => {
-    const cve   = item.cve;
-    const id    = cve.id;
-    const desc  = cve.descriptions?.find(d => d.lang === 'en')?.value || 'No description available.';
-    const sev   = getSeverity(item);
-    const score = getCVSS(item);
-    const pub   = cve.published ? cve.published.slice(0, 10) : '—';
-    const isKev = kevSet.has(id);
-    const scoreColor = score >= 9 ? 'var(--danger)' : score >= 7 ? '#ff7043' : score >= 4 ? 'var(--warn)' : 'var(--ok)';
-
-    html += `
-      <tr style="animation-delay:${i * 0.03}s">
-        <td class="cve-id">
-          <a href="https://nvd.nist.gov/vuln/detail/${id}" target="_blank" rel="noopener">${id}</a>
-        </td>
-        <td><span class="severity-badge sev-${sev}">${sev}</span></td>
-        <td><span class="cvss-score" style="color:${scoreColor}">${score > 0 ? score.toFixed(1) : '—'}</span></td>
-        <td class="description-cell">${escHtml(desc.slice(0, 160))}${desc.length > 160 ? '…' : ''}</td>
-        <td class="date-cell">${pub}</td>
-        <td>${isKev ? '<span class="zero-day-flag">⚡ KEV</span>' : '<span style="color:var(--muted);font-family:var(--font-mono);font-size:11px;">—</span>'}</td>
-      </tr>`;
+  pageItems.forEach((item,i)=>{
+    const cve=item.cve,id=cve.id;
+    const desc=cve.descriptions?.find(d=>d.lang==='en')?.value||'No description available.';
+    const sev=getSeverity(item),score=getCVSS(item);
+    const pub=cve.published?cve.published.slice(0,10):'—';
+    const isKev=kevSet.has(id);
+    const sc=score>=9?'var(--danger)':score>=7?'#ff7043':score>=4?'var(--warn)':'var(--ok)';
+    html+=`<tr style="animation-delay:${i*.03}s">
+      <td class="cve-id"><a href="https://nvd.nist.gov/vuln/detail/${id}" target="_blank" rel="noopener">${id}</a></td>
+      <td><span class="severity-badge sev-${sev}">${sev}</span></td>
+      <td><span class="cvss-score" style="color:${sc}">${score>0?score.toFixed(1):'—'}</span></td>
+      <td class="description-cell">${escHtml(desc.slice(0,160))}${desc.length>160?'…':''}</td>
+      <td class="date-cell">${pub}</td>
+      <td>${isKev?'<span class="zero-day-flag">⚡ KEV</span>':'<span style="color:var(--muted);font-family:var(--font-mono);font-size:11px;">—</span>'}</td>
+    </tr>`;
   });
 
-  html += '</tbody></table>';
+  html+='</tbody></table>';
 
-  // Pagination
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-  if (totalPages > 1) {
-    html += `<div class="pagination">
-      <div class="page-info">Page ${currentPage + 1} of ${totalPages}</div>
-      <div class="page-btns">
-        <button class="page-btn" onclick="goPage(${currentPage - 1})" ${currentPage === 0 ? 'disabled' : ''}>← Prev</button>`;
-    for (let p = 0; p < totalPages; p++) {
-      if (p < 3 || p > totalPages - 3 || Math.abs(p - currentPage) < 2) {
-        html += `<button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="goPage(${p})">${p + 1}</button>`;
-      } else if (Math.abs(p - currentPage) === 2) {
-        html += `<span style="color:var(--muted);padding:5px 4px;font-family:var(--font-mono);font-size:11px">…</span>`;
-      }
+  const totalPages=Math.ceil(total/PAGE_SIZE);
+  if(totalPages>1){
+    html+=`<div class="pagination"><div class="page-info">Page ${currentPage+1} of ${totalPages}</div><div class="page-btns">
+      <button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===0?'disabled':''}>← Prev</button>`;
+    for(let p=0;p<totalPages;p++){
+      if(p<3||p>totalPages-3||Math.abs(p-currentPage)<2)html+=`<button class="page-btn ${p===currentPage?'active':''}" onclick="goPage(${p})">${p+1}</button>`;
+      else if(Math.abs(p-currentPage)===2)html+=`<span style="color:var(--muted);padding:5px 4px;font-family:var(--font-mono);font-size:11px">…</span>`;
     }
-    html += `<button class="page-btn" onclick="goPage(${currentPage + 1})" ${currentPage >= totalPages - 1 ? 'disabled' : ''}>Next →</button>
-      </div>
-    </div>`;
+    html+=`<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage>=totalPages-1?'disabled':''}>Next →</button></div></div>`;
   }
-
-  body.innerHTML = html;
+  body.innerHTML=html;
 }
 
-function goPage(p) {
-  const filtered = getFilteredResults();
-  const maxPage = Math.ceil(filtered.length / PAGE_SIZE) - 1;
-  currentPage = Math.max(0, Math.min(p, maxPage));
+function goPage(p){
+  const filtered=getFilteredResults();
+  currentPage=Math.max(0,Math.min(p,Math.ceil(filtered.length/PAGE_SIZE)-1));
   renderResults();
-  document.querySelector('.table-wrapper').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.querySelector('.table-wrapper').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-// ─── Stats ───────────────────────────────────────────────────────────────────
-function updateStats() {
-  let c = 0, h = 0, m = 0, z = 0;
-  allResults.forEach(v => {
-    const s = getSeverity(v);
-    if (s === 'CRITICAL') c++;
-    else if (s === 'HIGH') h++;
-    else if (s === 'MEDIUM') m++;
-    if (kevSet.has(v.cve.id)) z++;
+function updateStats(){
+  let c=0,h=0,m=0,z=0;
+  allResults.forEach(v=>{
+    const s=getSeverity(v);
+    if(s==='CRITICAL')c++;else if(s==='HIGH')h++;else if(s==='MEDIUM')m++;
+    if(kevSet.has(v.cve.id))z++;
   });
-  document.getElementById('stat-critical').textContent = c;
-  document.getElementById('stat-high').textContent = h;
-  document.getElementById('stat-medium').textContent = m;
-  document.getElementById('stat-zerod').textContent = z;
+  document.getElementById('stat-critical').textContent=c;
+  document.getElementById('stat-high').textContent=h;
+  document.getElementById('stat-medium').textContent=m;
+  document.getElementById('stat-zerod').textContent=z;
 }
 
-// ─── Display filter toggle ───────────────────────────────────────────────────
-function setDisplayFilter(val, btn) {
-  displayFilter = val;
-  currentPage = 0;
-  document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderResults();
+function setDisplayFilter(val,btn){
+  displayFilter=val;currentPage=0;
+  document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');renderResults();
 }
 
-// ─── PWA: iOS Install Banner ─────────────────────────────────────────────────
-function dismissBanner() {
-  document.getElementById('install-banner').classList.remove('visible');
-  sessionStorage.setItem('install-dismissed', '1');
+function clearResults(){
+  allResults=[];
+  document.getElementById('vuln-body').innerHTML=`<div class="state-container"><div class="state-icon">🛡️</div><div class="state-title">Select a vendor and product to begin</div><div class="state-subtitle">Data sourced live from NIST National Vulnerability Database (NVD)</div></div>`;
+  document.getElementById('stats-bar').style.display='none';
+  document.getElementById('filter-toggles').style.display='none';
+  document.getElementById('table-title').textContent='Results';
+  document.getElementById('last-updated').textContent='—';
+  document.getElementById('search-context').classList.remove('visible');
+  document.getElementById('version-input').value='';
 }
 
-function maybeShowInstallBanner() {
-  // Only show on iOS Safari, not in standalone mode, not dismissed
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-  const isStandalone = window.navigator.standalone === true;
-  const dismissed = sessionStorage.getItem('install-dismissed');
-  if (isIOS && !isStandalone && !dismissed) {
-    setTimeout(() => {
-      document.getElementById('install-banner').classList.add('visible');
-    }, 2500);
-  }
-}
-
-// ─── PWA: Service Worker (inline as blob for single-file deployment) ──────────
-function registerServiceWorker() {
-  if (!('serviceWorker' in navigator)) return;
-
-  const swCode = `
-    const CACHE = 'vulnwatch-v1';
-    const SHELL = [
-      self.location.href.replace(/\\/sw\\.js.*/, '/'),
-    ];
-
-    self.addEventListener('install', e => {
-      e.waitUntil(
-        caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())
-      );
-    });
-
-    self.addEventListener('activate', e => {
-      e.waitUntil(
-        caches.keys().then(keys =>
-          Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-        ).then(() => self.clients.claim())
-      );
-    });
-
-    self.addEventListener('fetch', e => {
-      // Network-first for API calls, cache-first for shell
-      const url = e.request.url;
-      if (url.includes('nvd.nist.gov') || url.includes('cisa.gov') || url.includes('googleapis.com')) {
-        e.respondWith(
-          fetch(e.request).catch(() => caches.match(e.request))
-        );
-      } else {
-        e.respondWith(
-          caches.match(e.request).then(cached => cached || fetch(e.request).then(resp => {
-            const clone = resp.clone();
-            caches.open(CACHE).then(c => c.put(e.request, clone));
-            return resp;
-          }))
-        );
-      }
-    });
-  `;
-
-  const blob = new Blob([swCode], { type: 'application/javascript' });
-  const swUrl = URL.createObjectURL(blob);
-
-  navigator.serviceWorker.register(swUrl, { scope: './' })
-    .then(() => console.log('[VulnWatch] Service worker registered'))
-    .catch(err => console.warn('[VulnWatch] SW registration failed:', err));
-}
-
-// Init PWA features
-window.addEventListener('load', () => {
-  maybeShowInstallBanner();
-  registerServiceWorker();
-});
-
-function getSeverity(item) {
-  const metrics = item.cve?.metrics;
-  if (metrics?.cvssMetricV31?.[0]) return metrics.cvssMetricV31[0].cvssData.baseSeverity || 'UNKNOWN';
-  if (metrics?.cvssMetricV30?.[0]) return metrics.cvssMetricV30[0].cvssData.baseSeverity || 'UNKNOWN';
-  if (metrics?.cvssMetricV2?.[0])  {
-    const s = metrics.cvssMetricV2[0].baseSeverity;
-    return s === 'MEDIUM' ? 'MEDIUM' : s === 'HIGH' ? 'HIGH' : s === 'LOW' ? 'LOW' : 'UNKNOWN';
-  }
+function getSeverity(item){
+  const m=item.cve?.metrics;
+  if(m?.cvssMetricV31?.[0])return m.cvssMetricV31[0].cvssData.baseSeverity||'UNKNOWN';
+  if(m?.cvssMetricV30?.[0])return m.cvssMetricV30[0].cvssData.baseSeverity||'UNKNOWN';
+  if(m?.cvssMetricV2?.[0]){const s=m.cvssMetricV2[0].baseSeverity;return s==='MEDIUM'?'MEDIUM':s==='HIGH'?'HIGH':s==='LOW'?'LOW':'UNKNOWN';}
   return 'UNKNOWN';
 }
 
-function getCVSS(item) {
-  const metrics = item.cve?.metrics;
-  if (metrics?.cvssMetricV31?.[0]) return metrics.cvssMetricV31[0].cvssData.baseScore || 0;
-  if (metrics?.cvssMetricV30?.[0]) return metrics.cvssMetricV30[0].cvssData.baseScore || 0;
-  if (metrics?.cvssMetricV2?.[0])  return metrics.cvssMetricV2[0].cvssData.baseScore || 0;
+function getCVSS(item){
+  const m=item.cve?.metrics;
+  if(m?.cvssMetricV31?.[0])return m.cvssMetricV31[0].cvssData.baseScore||0;
+  if(m?.cvssMetricV30?.[0])return m.cvssMetricV30[0].cvssData.baseScore||0;
+  if(m?.cvssMetricV2?.[0])return m.cvssMetricV2[0].cvssData.baseScore||0;
   return 0;
 }
 
-function escHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function escHtml(str){return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function showLoading(){
+  document.getElementById('vuln-body').innerHTML=`<div class="state-container"><div class="spinner"></div><div class="state-title">Querying NVD Database…</div><div class="state-subtitle">Fetching live vulnerability data. This may take a few seconds.</div></div>`;
+  document.getElementById('stats-bar').style.display='none';
+  document.getElementById('filter-toggles').style.display='none';
 }
 
-function showLoading() {
-  document.getElementById('vuln-body').innerHTML = `
-    <div class="state-container">
-      <div class="spinner"></div>
-      <div class="state-title">Querying NVD Database…</div>
-      <div class="state-subtitle">Fetching live vulnerability data. This may take a few seconds.</div>
-    </div>`;
-  document.getElementById('stats-bar').style.display = 'none';
-  document.getElementById('filter-toggles').style.display = 'none';
+function showError(msg){
+  document.getElementById('vuln-body').innerHTML=`<div class="state-container"><div class="state-icon">⚠️</div><div class="state-title">Error</div><div class="state-subtitle">${escHtml(msg)}</div></div>`;
 }
 
-function showError(msg) {
-  document.getElementById('vuln-body').innerHTML = `
-    <div class="state-container">
-      <div class="state-icon">⚠️</div>
-      <div class="state-title">Error</div>
-      <div class="state-subtitle">${escHtml(msg)}</div>
-    </div>`;
+function dismissBanner(){document.getElementById('install-banner').classList.remove('visible');sessionStorage.setItem('install-dismissed','1');}
+
+function maybeShowInstallBanner(){
+  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.MSStream;
+  if(isIOS&&!window.navigator.standalone&&!sessionStorage.getItem('install-dismissed'))
+    setTimeout(()=>document.getElementById('install-banner').classList.add('visible'),2500);
 }
 
-function clearResults() {
-  allResults = [];
-  document.getElementById('vuln-body').innerHTML = `
-    <div class="state-container">
-      <div class="state-icon">🛡️</div>
-      <div class="state-title">Select a vendor and product to begin</div>
-      <div class="state-subtitle">Data sourced live from NIST National Vulnerability Database (NVD)</div>
-    </div>`;
-  document.getElementById('stats-bar').style.display = 'none';
-  document.getElementById('filter-toggles').style.display = 'none';
-  document.getElementById('table-title').textContent = 'Results';
-  document.getElementById('last-updated').textContent = '—';
+function registerServiceWorker(){
+  if(!('serviceWorker'in navigator))return;
+  const swCode=`const CACHE='vulnwatch-v2';const SHELL=[self.location.href.replace(/\\/sw\\.js.*/,'/')];
+  self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()))});
+  self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
+  self.addEventListener('fetch',e=>{const u=e.request.url;if(u.includes('nvd.nist.gov')||u.includes('cisa.gov')||u.includes('googleapis.com')){e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));}else{e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).then(r=>{const cl=r.clone();caches.open(CACHE).then(ca=>ca.put(e.request,cl));return r;})));}});`;
+  const blob=new Blob([swCode],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob),{scope:'./'})
+    .then(()=>console.log('[VulnWatch] SW registered'))
+    .catch(e=>console.warn('[VulnWatch] SW failed:',e));
 }
+
+window.addEventListener('load',()=>{maybeShowInstallBanner();registerServiceWorker();});
 </script>
-
 </body>
 </html>
