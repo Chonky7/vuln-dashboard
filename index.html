@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>VulnWatch — IT Vulnerability Intelligence</title>
 <meta name="application-name" content="VulnWatch">
-<meta name="description" content="Live IT vulnerability and zero-day intelligence dashboard powered by NIST NVD and CISA KEV.">
+<meta name="description" content="Live IT vulnerability and zero-day intelligence dashboard powered by NIST NVD, CISA KEV, and Cisco PSIRT.">
 <meta name="theme-color" content="#0a0c10">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,11 +13,13 @@
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%230a0c10'/%3E%3Cpolygon points='256,60 452,165 452,347 256,452 60,347 60,165' fill='none' stroke='%2300e5ff' stroke-width='28'/%3E%3Ctext x='256' y='300' text-anchor='middle' font-family='monospace' font-size='180' font-weight='bold' fill='%2300e5ff'%3EV%3C/text%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0a0c10;--surface:#0f1219;--surface2:#161b25;--border:#1e2535;--accent:#00e5ff;--danger:#ff3b5c;--warn:#ffb800;--ok:#00d68f;--text:#cdd6f4;--muted:#6c7a99;--font-mono:'JetBrains Mono',monospace;--font-sans:'Syne',sans-serif}
+:root{--bg:#0a0c10;--surface:#0f1219;--surface2:#161b25;--border:#1e2535;--accent:#00e5ff;--accent2:#ff6b35;--danger:#ff3b5c;--warn:#ffb800;--ok:#00d68f;--text:#cdd6f4;--muted:#6c7a99;--font-mono:'JetBrains Mono',monospace;--font-sans:'Syne',sans-serif}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:var(--font-sans);min-height:100vh;min-height:100dvh;overflow-x:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--font-sans);min-height:100vh;overflow-x:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
 .container{max-width:1400px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+/* ── Header ── */
 header{border-bottom:1px solid var(--border);padding:20px 0;position:sticky;top:0;background:rgba(10,12,16,.95);backdrop-filter:blur(12px);z-index:100}
 .header-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .logo{display:flex;align-items:center;gap:12px}
@@ -29,16 +31,31 @@ header{border-bottom:1px solid var(--border);padding:20px 0;position:sticky;top:
 .live-dot{display:inline-block;width:7px;height:7px;background:var(--ok);border-radius:50%;margin-right:5px;animation:blink 1.4s ease-in-out infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
-/* Quick Presets */
+/* ── Tab bar ── */
+.tab-bar{display:flex;gap:4px;padding:16px 0 0;border-bottom:1px solid var(--border);margin-bottom:0}
+.tab-btn{font-family:var(--font-mono);font-size:12px;font-weight:600;padding:10px 20px;border:1px solid transparent;border-bottom:none;border-radius:6px 6px 0 0;cursor:pointer;text-transform:uppercase;letter-spacing:.8px;transition:all .2s;display:flex;align-items:center;gap:8px;background:transparent;color:var(--muted);position:relative;top:1px}
+.tab-btn:hover{color:var(--text);background:var(--surface2)}
+.tab-btn.active{color:var(--text);background:var(--surface);border-color:var(--border);border-bottom-color:var(--surface)}
+.tab-btn.cisco-tab.active{color:var(--accent2)}
+.tab-btn .tab-badge{font-size:9px;padding:1px 6px;border-radius:3px;font-weight:700}
+.tab-btn.active .tab-badge{background:rgba(0,229,255,.15);color:var(--accent)}
+.tab-btn.cisco-tab.active .tab-badge{background:rgba(255,107,53,.15);color:var(--accent2)}
+
+/* ── Tab panels ── */
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* ── Quick Presets ── */
 .presets-section{padding:18px 0 10px;border-bottom:1px solid var(--border);margin-bottom:4px}
 .presets-label{font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .presets-label::after{content:'';flex:1;height:1px;background:var(--border)}
 .presets-grid{display:flex;flex-wrap:wrap;gap:7px}
 .preset-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:11px;padding:6px 13px;border-radius:5px;cursor:pointer;transition:all .18s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
 .preset-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,229,255,.07);transform:translateY(-1px)}
+.preset-btn.cisco-psirt-btn:hover{border-color:var(--accent2);color:var(--accent2);background:rgba(255,107,53,.07)}
 .preset-vendor{color:var(--muted);font-size:10px}
 
-/* Filters */
+/* ── Filters ── */
 .filters-bar{padding:16px 0 12px;display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
 .filter-group{display:flex;flex-direction:column;gap:6px}
 .filter-label{font-family:var(--font-mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
@@ -52,13 +69,15 @@ input[type="text"]::placeholder{color:var(--muted)}
 .btn:active{transform:translateY(0)}
 .btn-outline{background:transparent;color:var(--accent);border:1px solid var(--accent)}
 .btn-outline:hover{background:rgba(0,229,255,.1);color:var(--accent)}
+.btn-cisco{background:var(--accent2);color:#fff}
+.btn-cisco:hover{background:#ff8c5a;box-shadow:0 4px 20px rgba(255,107,53,.3)}
 
-/* Search context badge */
+/* ── Search context badge ── */
 .search-context{display:none;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;color:var(--muted);padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;margin-bottom:14px;flex-wrap:wrap}
 .search-context.visible{display:flex}
 .ctx-tag{color:var(--accent);background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.25);padding:2px 8px;border-radius:3px;font-weight:700}
 
-/* Stats */
+/* ── Stats ── */
 .stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px 20px;position:relative;overflow:hidden}
 .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
@@ -73,7 +92,7 @@ input[type="text"]::placeholder{color:var(--muted)}
 .stat-card.zero-day .stat-value{color:var(--accent)}
 .stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-family:var(--font-mono)}
 
-/* Table */
+/* ── Table ── */
 .table-wrapper{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:40px}
 .table-header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--border);gap:12px;flex-wrap:wrap}
 .table-title{font-family:var(--font-mono);font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
@@ -81,8 +100,7 @@ input[type="text"]::placeholder{color:var(--muted)}
 .toggle-btn{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:var(--font-mono);font-size:11px;padding:5px 12px;border-radius:4px;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.5px}
 .toggle-btn.active,.toggle-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,229,255,.07)}
 table{width:100%;border-collapse:collapse}
-thead th{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:12px 20px;text-align:left;background:var(--surface2);border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap}
-thead th:hover{color:var(--accent)}
+thead th{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:12px 20px;text-align:left;background:var(--surface2);border-bottom:1px solid var(--border);user-select:none;white-space:nowrap}
 tbody tr{border-bottom:1px solid var(--border);transition:background .15s;animation:row-in .3s ease backwards}
 @keyframes row-in{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
 tbody tr:hover{background:rgba(0,229,255,.04)}
@@ -91,7 +109,7 @@ td{padding:14px 20px;font-size:13px;vertical-align:middle}
 .cve-id{font-family:var(--font-mono);font-size:12px;color:var(--accent);font-weight:600;white-space:nowrap}
 .cve-id a{color:inherit;text-decoration:none}
 .cve-id a:hover{text-decoration:underline}
-.severity-badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:3px 10px;border-radius:3px;white-space:nowrap}
+.severity-badge{display:inline-flex;align-items:center;font-family:var(--font-mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:3px 10px;border-radius:3px;white-space:nowrap}
 .sev-CRITICAL{background:rgba(255,59,92,.15);color:var(--danger);border:1px solid rgba(255,59,92,.3)}
 .sev-HIGH{background:rgba(255,112,67,.15);color:#ff7043;border:1px solid rgba(255,112,67,.3)}
 .sev-MEDIUM{background:rgba(255,184,0,.15);color:var(--warn);border:1px solid rgba(255,184,0,.3)}
@@ -102,15 +120,82 @@ td{padding:14px 20px;font-size:13px;vertical-align:middle}
 .date-cell{font-family:var(--font-mono);font-size:11px;color:var(--muted);white-space:nowrap}
 .cvss-score{font-family:var(--font-mono);font-size:14px;font-weight:700}
 
-/* States */
+/* ── NVD keyword explanation banner ── */
+.nvd-note{display:none;align-items:flex-start;gap:10px;padding:10px 16px;background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.25);border-radius:6px;margin-bottom:14px;font-family:var(--font-mono);font-size:11px;color:var(--warn);line-height:1.6}
+.nvd-note.visible{display:flex}
+.nvd-note strong{color:var(--warn)}
+
+/* ── Cisco PSIRT panel ── */
+.psirt-panel{padding:20px 0}
+.psirt-intro{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px 28px;margin-bottom:20px}
+.psirt-intro-header{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.psirt-logo{width:40px;height:40px;background:rgba(255,107,53,.15);border:1px solid rgba(255,107,53,.3);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.psirt-title{font-size:18px;font-weight:700;color:var(--text)}
+.psirt-subtitle{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-top:2px}
+.psirt-body{font-family:var(--font-mono);font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:16px}
+.psirt-body strong{color:var(--text)}
+.psirt-body .highlight{color:var(--accent2)}
+.psirt-checkers{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:20px}
+.checker-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:18px 20px;transition:border-color .2s}
+.checker-card:hover{border-color:var(--accent2)}
+.checker-card-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.checker-card-icon{font-size:20px}
+.checker-card-title{font-weight:700;font-size:14px;color:var(--text)}
+.checker-card-desc{font-family:var(--font-mono);font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:14px}
+.checker-card-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.checker-tag{font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:3px;background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.25);color:var(--accent2)}
+
+/* ── Quick-open Cisco Software Checker buttons ── */
+.psirt-quick-section{margin-bottom:20px}
+.psirt-quick-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.psirt-quick-btn{background:var(--surface2);border:1px solid rgba(255,107,53,.3);color:var(--text);font-family:var(--font-mono);font-size:11px;padding:8px 14px;border-radius:5px;cursor:pointer;transition:all .18s;white-space:nowrap;display:inline-flex;align-items:center;gap:7px;text-decoration:none}
+.psirt-quick-btn:hover{border-color:var(--accent2);color:var(--accent2);background:rgba(255,107,53,.07);transform:translateY(-1px)}
+.psirt-quick-btn .pq-arrow{opacity:.5;font-size:10px}
+
+/* ── Cisco API key section ── */
+.psirt-api-section{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px 28px}
+.psirt-api-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.psirt-api-desc{font-family:var(--font-mono);font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:18px}
+.api-key-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px}
+.api-key-row input{flex:1;min-width:200px}
+.api-status{font-family:var(--font-mono);font-size:11px;padding:6px 12px;border-radius:4px;display:none}
+.api-status.ok{display:block;background:rgba(0,214,143,.1);border:1px solid rgba(0,214,143,.25);color:var(--ok)}
+.api-status.err{display:block;background:rgba(255,59,92,.1);border:1px solid rgba(255,59,92,.25);color:var(--danger)}
+
+/* ── PSIRT results table (shared styles with NVD but orange accent) ── */
+.psirt-results-wrapper{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-top:20px;margin-bottom:40px}
+.psirt-table-header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--border);gap:12px;flex-wrap:wrap}
+.psirt-table-title{font-family:var(--font-mono);font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.psirt-advisory-table{width:100%;border-collapse:collapse}
+.psirt-advisory-table thead th{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:12px 20px;text-align:left;background:var(--surface2);border-bottom:1px solid var(--border);white-space:nowrap}
+.psirt-advisory-table tbody tr{border-bottom:1px solid var(--border);transition:background .15s;animation:row-in .3s ease backwards}
+.psirt-advisory-table tbody tr:hover{background:rgba(255,107,53,.04)}
+.psirt-advisory-table tbody tr:last-child{border-bottom:none}
+.psirt-advisory-table td{padding:13px 20px;font-size:12px;vertical-align:middle}
+.advisory-id{font-family:var(--font-mono);font-size:11px;color:var(--accent2);font-weight:600;white-space:nowrap}
+.advisory-id a{color:inherit;text-decoration:none}
+.advisory-id a:hover{text-decoration:underline}
+.sir-badge{display:inline-flex;font-family:var(--font-mono);font-size:10px;font-weight:700;text-transform:uppercase;padding:3px 10px;border-radius:3px;white-space:nowrap}
+.sir-CRITICAL{background:rgba(255,59,92,.15);color:var(--danger);border:1px solid rgba(255,59,92,.3)}
+.sir-HIGH{background:rgba(255,112,67,.15);color:#ff7043;border:1px solid rgba(255,112,67,.3)}
+.sir-MEDIUM{background:rgba(255,184,0,.15);color:var(--warn);border:1px solid rgba(255,184,0,.3)}
+.sir-LOW{background:rgba(0,214,143,.1);color:var(--ok);border:1px solid rgba(0,214,143,.25)}
+.sir-INFORMATIONAL,.sir-NA{background:rgba(108,122,153,.1);color:var(--muted);border:1px solid var(--border)}
+.psirt-cve-list{font-family:var(--font-mono);font-size:10px;color:var(--muted)}
+
+/* ── PSIRT search bar ── */
+.psirt-search-bar{padding:16px 0 12px;display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+
+/* ── States ── */
 .state-container{padding:80px 24px;text-align:center;color:var(--muted)}
 .state-icon{font-size:48px;margin-bottom:16px;opacity:.5}
 .state-title{font-size:16px;font-weight:600;margin-bottom:8px;color:var(--text)}
 .state-subtitle{font-family:var(--font-mono);font-size:12px;line-height:1.6}
 .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px}
+.spinner-orange{border-top-color:var(--accent2)}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* Pagination */
+/* ── Pagination ── */
 .pagination{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-top:1px solid var(--border);background:var(--surface2);flex-wrap:wrap;gap:12px}
 .page-info{font-family:var(--font-mono);font-size:11px;color:var(--muted)}
 .page-btns{display:flex;gap:6px}
@@ -118,14 +203,14 @@ td{padding:14px 20px;font-size:13px;vertical-align:middle}
 .page-btn:hover,.page-btn.active{border-color:var(--accent);color:var(--accent)}
 .page-btn:disabled{opacity:.3;cursor:not-allowed}
 
-/* Footer */
+/* ── Footer ── */
 footer{border-top:1px solid var(--border);padding:20px 0;margin-top:20px}
 .footer-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
 .footer-note{font-family:var(--font-mono);font-size:11px;color:var(--muted);line-height:1.6}
 
-/* Responsive */
+/* ── Responsive ── */
 @media(max-width:768px){
-  .filters-bar{gap:12px}
+  .filters-bar,.psirt-search-bar{gap:12px}
   select,input[type="text"]{min-width:140px;font-size:16px}
   td{padding:10px 12px}
   thead th{padding:10px 12px}
@@ -134,17 +219,18 @@ footer{border-top:1px solid var(--border);padding:20px 0;margin-top:20px}
   .filter-group{width:calc(50% - 8px)}
   .filter-group select{width:100%;min-width:unset}
   .version-input{min-width:unset;max-width:unset;width:100%}
+  .psirt-checkers{grid-template-columns:1fr}
 }
 @media(max-width:480px){
   .container{padding:0 16px}
   .logo-text{font-size:18px}
   .header-meta{display:none}
   .stat-value{font-size:22px}
-  .filters-bar{padding:16px 0}
   .filter-group{width:100%}
   .filter-group select{width:100%}
   .btn{width:100%;justify-content:center}
-  .preset-btn{font-size:10px;padding:5px 9px}
+  .preset-btn,.psirt-quick-btn{font-size:10px;padding:5px 9px}
+  .tab-btn{font-size:10px;padding:8px 12px}
 }
 
 /* iOS Banner */
@@ -168,7 +254,7 @@ footer{border-top:1px solid var(--border);padding:20px 0;margin-top:20px}
         <div><div class="logo-text">Vuln<span>Watch</span></div></div>
       </div>
       <div class="header-meta">
-        <div><span class="live-dot"></span>Live data via NVD / NIST</div>
+        <div><span class="live-dot"></span>NVD / NIST &nbsp;+&nbsp; Cisco PSIRT</div>
         <div id="last-updated">—</div>
       </div>
     </div>
@@ -177,140 +263,300 @@ footer{border-top:1px solid var(--border);padding:20px 0;margin-top:20px}
 
 <div class="container">
 
-  <!-- Quick Search Presets -->
-  <div class="presets-section">
-    <div class="presets-label">⚡ Quick Search — Common Devices &amp; Platforms</div>
-    <div class="presets-grid">
-      <button class="preset-btn" onclick="applyPreset('cisco','cisco firepower threat defense','','')">🔥 Firepower FTD <span class="preset-vendor">Cisco</span></button>
-      <button class="preset-btn" onclick="applyPreset('cisco','cisco firepower 4100','','')">🔥 Firepower 4100 <span class="preset-vendor">Cisco</span></button>
-      <button class="preset-btn" onclick="applyPreset('cisco','cisco firepower 4112','','')">🔥 Firepower 4112 <span class="preset-vendor">Cisco</span></button>
-      <button class="preset-btn" onclick="applyPreset('cisco','cisco firepower management center','','')">🔥 FMC <span class="preset-vendor">Cisco</span></button>
-      <button class="preset-btn" onclick="applyPreset('cisco','cisco asa','','')">🛡️ ASA <span class="preset-vendor">Cisco</span></button>
-      <button class="preset-btn" onclick="applyPreset('cisco','cisco ios xe','','')">📡 IOS XE <span class="preset-vendor">Cisco</span></button>
-      <button class="preset-btn" onclick="applyPreset('cisco','cisco anyconnect','','')">🔑 AnyConnect <span class="preset-vendor">Cisco</span></button>
-      <button class="preset-btn" onclick="applyPreset('palo_alto','palo alto pan-os','','')">🔒 PAN-OS <span class="preset-vendor">Palo Alto</span></button>
-      <button class="preset-btn" onclick="applyPreset('palo_alto','palo alto globalprotect','','')">🌐 GlobalProtect <span class="preset-vendor">Palo Alto</span></button>
-      <button class="preset-btn" onclick="applyPreset('fortinet','fortinet fortios','','')">🏰 FortiOS <span class="preset-vendor">Fortinet</span></button>
-      <button class="preset-btn" onclick="applyPreset('fortinet','fortinet fortigate','','')">🏰 FortiGate <span class="preset-vendor">Fortinet</span></button>
-      <button class="preset-btn" onclick="applyPreset('ivanti','ivanti connect secure','','CRITICAL')">⚠️ Connect Secure <span class="preset-vendor">Ivanti · Critical</span></button>
-      <button class="preset-btn" onclick="applyPreset('microsoft','microsoft windows 11','','')">🪟 Windows 11 <span class="preset-vendor">Microsoft</span></button>
-      <button class="preset-btn" onclick="applyPreset('microsoft','microsoft windows server 2022','','')">🪟 Server 2022 <span class="preset-vendor">Microsoft</span></button>
-      <button class="preset-btn" onclick="applyPreset('microsoft','microsoft windows server 2019','','')">🪟 Server 2019 <span class="preset-vendor">Microsoft</span></button>
-      <button class="preset-btn" onclick="applyPreset('redhat','red hat enterprise linux','','')">🐧 RHEL <span class="preset-vendor">Red Hat</span></button>
-      <button class="preset-btn" onclick="applyPreset('redhat','red hat enterprise linux 9','','')">🐧 RHEL 9 <span class="preset-vendor">Red Hat</span></button>
-      <button class="preset-btn" onclick="applyPreset('linux','linux linux kernel','','CRITICAL')">🐧 Linux Kernel <span class="preset-vendor">Critical</span></button>
-      <button class="preset-btn" onclick="applyPreset('ubuntu','canonical ubuntu','','')">🐧 Ubuntu <span class="preset-vendor">Canonical</span></button>
-      <button class="preset-btn" onclick="applyPreset('f5','f5 big-ip','','')">⚖️ BIG-IP <span class="preset-vendor">F5</span></button>
-      <button class="preset-btn" onclick="applyPreset('citrix','citrix netscaler','','')">🖥️ NetScaler <span class="preset-vendor">Citrix</span></button>
-      <button class="preset-btn" onclick="applyPreset('checkpoint','check point gaia','','')">✅ Gaia OS <span class="preset-vendor">Check Point</span></button>
-    </div>
+  <!-- ── Tab bar ── -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('nvd',this)">
+      🔍 NVD Search <span class="tab-badge">NIST</span>
+    </button>
+    <button class="tab-btn cisco-tab" onclick="switchTab('psirt',this)">
+      🛡️ Cisco PSIRT <span class="tab-badge">OFFICIAL</span>
+    </button>
   </div>
 
-  <!-- Filters -->
-  <div class="filters-bar">
-    <div class="filter-group">
-      <div class="filter-label">Vendor</div>
-      <select id="vendor-select" onchange="onVendorChange()">
-        <option value="">— All Vendors —</option>
-        <optgroup label="── Network Security ──">
-          <option value="cisco">Cisco</option>
-          <option value="palo_alto">Palo Alto Networks</option>
-          <option value="fortinet">Fortinet</option>
-          <option value="checkpoint">Check Point</option>
-          <option value="juniper">Juniper Networks</option>
-          <option value="f5">F5 Networks</option>
-          <option value="citrix">Citrix</option>
-          <option value="ivanti">Ivanti</option>
-        </optgroup>
-        <optgroup label="── Operating Systems ──">
-          <option value="microsoft">Microsoft (Windows)</option>
-          <option value="redhat">Red Hat (RHEL)</option>
-          <option value="linux">Linux Kernel</option>
-          <option value="ubuntu">Ubuntu / Canonical</option>
-          <option value="debian">Debian</option>
-          <option value="suse">SUSE Linux</option>
-        </optgroup>
-        <optgroup label="── Infrastructure ──">
-          <option value="vmware">VMware / Broadcom</option>
-        </optgroup>
-      </select>
-    </div>
+  <!-- ════════════════════════════════════════════════════ -->
+  <!-- TAB 1 — NVD                                         -->
+  <!-- ════════════════════════════════════════════════════ -->
+  <div class="tab-panel active" id="tab-nvd">
 
-    <div class="filter-group">
-      <div class="filter-label">Product / Solution</div>
-      <select id="product-select">
-        <option value="">— Select Vendor First —</option>
-      </select>
-    </div>
-
-    <div class="filter-group">
-      <div class="filter-label">Version (optional)</div>
-      <input type="text" id="version-input" class="version-input" placeholder="e.g. 7.6.4" title="Specific version to narrow results">
-    </div>
-
-    <div class="filter-group">
-      <div class="filter-label">Severity</div>
-      <select id="severity-select">
-        <option value="">All Severities</option>
-        <option value="CRITICAL">Critical</option>
-        <option value="HIGH">High</option>
-        <option value="MEDIUM">Medium</option>
-        <option value="LOW">Low</option>
-      </select>
-    </div>
-
-    <div class="filter-group">
-      <div class="filter-label">Zero-Day / KEV</div>
-      <select id="zerod-select">
-        <option value="">All CVEs</option>
-        <option value="kev">Known Exploited (KEV)</option>
-      </select>
-    </div>
-
-    <button class="btn" onclick="runSearch()">⟳ Fetch CVEs</button>
-    <button class="btn btn-outline" onclick="clearResults()">Clear</button>
-  </div>
-
-  <!-- Active search badge -->
-  <div class="search-context" id="search-context"></div>
-
-  <div class="stats-bar" id="stats-bar" style="display:none">
-    <div class="stat-card critical"><div class="stat-value" id="stat-critical">0</div><div class="stat-label">Critical</div></div>
-    <div class="stat-card high"><div class="stat-value" id="stat-high">0</div><div class="stat-label">High</div></div>
-    <div class="stat-card medium"><div class="stat-value" id="stat-medium">0</div><div class="stat-label">Medium</div></div>
-    <div class="stat-card zero-day"><div class="stat-value" id="stat-zerod">0</div><div class="stat-label">Zero-Day / KEV</div></div>
-  </div>
-
-  <div class="table-wrapper">
-    <div class="table-header">
-      <div class="table-title" id="table-title">Results</div>
-      <div class="toggle-group" id="filter-toggles" style="display:none">
-        <button class="toggle-btn active" onclick="setDisplayFilter('all',this)">All</button>
-        <button class="toggle-btn" onclick="setDisplayFilter('CRITICAL',this)">Critical</button>
-        <button class="toggle-btn" onclick="setDisplayFilter('HIGH',this)">High</button>
-        <button class="toggle-btn" onclick="setDisplayFilter('kev',this)">⚡ KEV</button>
+    <!-- Quick Search Presets -->
+    <div class="presets-section">
+      <div class="presets-label">⚡ Quick Search — Common Devices &amp; Platforms</div>
+      <div class="presets-grid">
+        <!-- Cisco — note: uses software keywords, not model numbers -->
+        <button class="preset-btn" onclick="applyPreset('cisco','cisco firepower threat defense','','')">🔥 Firepower FTD <span class="preset-vendor">Cisco</span></button>
+        <button class="preset-btn" onclick="applyPreset('cisco','cisco fxos','','')">🔥 FXOS (4100/9300) <span class="preset-vendor">Cisco</span></button>
+        <button class="preset-btn" onclick="applyPreset('cisco','cisco firepower management center','','')">🔥 FMC <span class="preset-vendor">Cisco</span></button>
+        <button class="preset-btn" onclick="applyPreset('cisco','cisco asa','','')">🛡️ ASA <span class="preset-vendor">Cisco</span></button>
+        <button class="preset-btn" onclick="applyPreset('cisco','cisco ios xe','','')">📡 IOS XE <span class="preset-vendor">Cisco</span></button>
+        <button class="preset-btn" onclick="applyPreset('cisco','cisco anyconnect','','')">🔑 AnyConnect <span class="preset-vendor">Cisco</span></button>
+        <button class="preset-btn" onclick="applyPreset('palo_alto','palo alto pan-os','','')">🔒 PAN-OS <span class="preset-vendor">Palo Alto</span></button>
+        <button class="preset-btn" onclick="applyPreset('palo_alto','palo alto globalprotect','','')">🌐 GlobalProtect <span class="preset-vendor">Palo Alto</span></button>
+        <button class="preset-btn" onclick="applyPreset('fortinet','fortinet fortios','','')">🏰 FortiOS <span class="preset-vendor">Fortinet</span></button>
+        <button class="preset-btn" onclick="applyPreset('fortinet','fortinet fortigate','','')">🏰 FortiGate <span class="preset-vendor">Fortinet</span></button>
+        <button class="preset-btn" onclick="applyPreset('ivanti','ivanti connect secure','','CRITICAL')">⚠️ Connect Secure <span class="preset-vendor">Ivanti·Crit</span></button>
+        <button class="preset-btn" onclick="applyPreset('microsoft','microsoft windows 11','','')">🪟 Windows 11 <span class="preset-vendor">Microsoft</span></button>
+        <button class="preset-btn" onclick="applyPreset('microsoft','microsoft windows server 2022','','')">🪟 Server 2022 <span class="preset-vendor">Microsoft</span></button>
+        <button class="preset-btn" onclick="applyPreset('redhat','red hat enterprise linux 9','','')">🐧 RHEL 9 <span class="preset-vendor">Red Hat</span></button>
+        <button class="preset-btn" onclick="applyPreset('linux','linux linux kernel','','CRITICAL')">🐧 Linux Kernel <span class="preset-vendor">Critical</span></button>
+        <button class="preset-btn" onclick="applyPreset('ubuntu','canonical ubuntu','','')">🐧 Ubuntu <span class="preset-vendor">Canonical</span></button>
+        <button class="preset-btn" onclick="applyPreset('f5','f5 big-ip','','')">⚖️ BIG-IP <span class="preset-vendor">F5</span></button>
+        <button class="preset-btn" onclick="applyPreset('citrix','citrix netscaler','','')">🖥️ NetScaler <span class="preset-vendor">Citrix</span></button>
+        <button class="preset-btn" onclick="applyPreset('checkpoint','check point gaia','','')">✅ Gaia OS <span class="preset-vendor">Check Point</span></button>
       </div>
     </div>
-    <div id="vuln-body">
-      <div class="state-container">
-        <div class="state-icon">🛡️</div>
-        <div class="state-title">Select a vendor and product to begin</div>
-        <div class="state-subtitle">
-          Use the Quick Search presets above, or manually select vendor + product.<br>
-          Optionally add a <strong style="color:var(--accent)">version number</strong> (e.g. 7.6.4) to narrow results.<br>
-          Data sourced live from NIST National Vulnerability Database (NVD)
+
+    <!-- NVD keyword note (shown when Cisco Firepower/FXOS selected) -->
+    <div class="nvd-note" id="nvd-note">
+      ⚠️ <div><strong>NVD indexes Cisco by software name, not hardware model.</strong> The Firepower 4112 runs <strong>FTD</strong> and <strong>FXOS</strong> software — search for those to find relevant CVEs. For model-specific results, use the <strong style="cursor:pointer;text-decoration:underline" onclick="switchTab('psirt',document.querySelectorAll('.tab-btn')[1])">Cisco PSIRT tab →</strong></div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-bar">
+      <div class="filter-group">
+        <div class="filter-label">Vendor</div>
+        <select id="vendor-select" onchange="onVendorChange()">
+          <option value="">— All Vendors —</option>
+          <optgroup label="── Network Security ──">
+            <option value="cisco">Cisco</option>
+            <option value="palo_alto">Palo Alto Networks</option>
+            <option value="fortinet">Fortinet</option>
+            <option value="checkpoint">Check Point</option>
+            <option value="juniper">Juniper Networks</option>
+            <option value="f5">F5 Networks</option>
+            <option value="citrix">Citrix</option>
+            <option value="ivanti">Ivanti</option>
+          </optgroup>
+          <optgroup label="── Operating Systems ──">
+            <option value="microsoft">Microsoft (Windows)</option>
+            <option value="redhat">Red Hat (RHEL)</option>
+            <option value="linux">Linux Kernel</option>
+            <option value="ubuntu">Ubuntu / Canonical</option>
+            <option value="debian">Debian</option>
+            <option value="suse">SUSE Linux</option>
+          </optgroup>
+          <optgroup label="── Infrastructure ──">
+            <option value="vmware">VMware / Broadcom</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Product / Solution</div>
+        <select id="product-select">
+          <option value="">— Select Vendor First —</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Version (optional)</div>
+        <input type="text" id="version-input" class="version-input" placeholder="e.g. 7.6.4">
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Severity</div>
+        <select id="severity-select">
+          <option value="">All Severities</option>
+          <option value="CRITICAL">Critical</option>
+          <option value="HIGH">High</option>
+          <option value="MEDIUM">Medium</option>
+          <option value="LOW">Low</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Zero-Day / KEV</div>
+        <select id="zerod-select">
+          <option value="">All CVEs</option>
+          <option value="kev">Known Exploited (KEV)</option>
+        </select>
+      </div>
+      <button class="btn" onclick="runSearch()">⟳ Fetch CVEs</button>
+      <button class="btn btn-outline" onclick="clearResults()">Clear</button>
+    </div>
+
+    <div class="search-context" id="search-context"></div>
+
+    <div class="stats-bar" id="stats-bar" style="display:none">
+      <div class="stat-card critical"><div class="stat-value" id="stat-critical">0</div><div class="stat-label">Critical</div></div>
+      <div class="stat-card high"><div class="stat-value" id="stat-high">0</div><div class="stat-label">High</div></div>
+      <div class="stat-card medium"><div class="stat-value" id="stat-medium">0</div><div class="stat-label">Medium</div></div>
+      <div class="stat-card zero-day"><div class="stat-value" id="stat-zerod">0</div><div class="stat-label">Zero-Day / KEV</div></div>
+    </div>
+
+    <div class="table-wrapper">
+      <div class="table-header">
+        <div class="table-title" id="table-title">Results</div>
+        <div class="toggle-group" id="filter-toggles" style="display:none">
+          <button class="toggle-btn active" onclick="setDisplayFilter('all',this)">All</button>
+          <button class="toggle-btn" onclick="setDisplayFilter('CRITICAL',this)">Critical</button>
+          <button class="toggle-btn" onclick="setDisplayFilter('HIGH',this)">High</button>
+          <button class="toggle-btn" onclick="setDisplayFilter('kev',this)">⚡ KEV</button>
+        </div>
+      </div>
+      <div id="vuln-body">
+        <div class="state-container">
+          <div class="state-icon">🛡️</div>
+          <div class="state-title">Select a vendor and product to begin</div>
+          <div class="state-subtitle">
+            Use Quick Search presets above, or manually select vendor + product.<br>
+            Add a <strong style="color:var(--accent)">version</strong> (e.g. 7.6.4) to narrow results.<br>
+            <strong style="color:var(--warn)">For Cisco hardware models (Firepower 4112, etc.), use the Cisco PSIRT tab →</strong>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-</div>
+  </div><!-- /tab-nvd -->
+
+  <!-- ════════════════════════════════════════════════════ -->
+  <!-- TAB 2 — CISCO PSIRT                                 -->
+  <!-- ════════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-psirt">
+    <div class="psirt-panel">
+
+      <!-- Intro card -->
+      <div class="psirt-intro">
+        <div class="psirt-intro-header">
+          <div class="psirt-logo">🛡️</div>
+          <div>
+            <div class="psirt-title">Cisco PSIRT Vulnerability Tools</div>
+            <div class="psirt-subtitle">Official Cisco Security Advisory data — model & version aware</div>
+          </div>
+        </div>
+        <div class="psirt-body">
+          <strong>Why use this instead of NVD for Cisco?</strong><br>
+          NVD indexes CVEs by <span class="highlight">software name</span> (FTD, FXOS, IOS XE…), not hardware model numbers.
+          Searching for "Firepower 4112" in NVD returns nothing because CVE descriptions say <em>"Cisco Firepower Threat Defense Software"</em> or <em>"Cisco FXOS"</em>.<br><br>
+          The Cisco Software Checker and PSIRT openVuln API know that the <span class="highlight">Firepower 4112</span> runs
+          <span class="highlight">FTD + FXOS</span> and map model → software → advisory automatically.
+          They are the authoritative source for Cisco vulnerability data.
+        </div>
+
+        <!-- Two checker cards -->
+        <div class="psirt-checkers">
+          <div class="checker-card">
+            <div class="checker-card-header">
+              <div class="checker-card-icon">🔎</div>
+              <div class="checker-card-title">Cisco Software Checker</div>
+            </div>
+            <div class="checker-card-desc">
+              Official web tool. Select your product family and exact software version — it returns all applicable Cisco Security Advisories. No account needed.
+            </div>
+            <div class="checker-card-tags">
+              <span class="checker-tag">No login required</span>
+              <span class="checker-tag">FTD · ASA · IOS XE · FXOS · NX-OS</span>
+              <span class="checker-tag">Version-aware</span>
+            </div>
+            <a href="https://sec.cloudapps.cisco.com/security/center/softwarechecker.x" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:var(--accent2);color:#fff;font-family:var(--font-mono);font-size:11px;font-weight:700;padding:8px 16px;border-radius:5px;text-decoration:none;transition:all .2s" onmouseover="this.style.background='#ff8c5a'" onmouseout="this.style.background='var(--accent2)'">
+              Open Software Checker ↗
+            </a>
+          </div>
+
+          <div class="checker-card">
+            <div class="checker-card-header">
+              <div class="checker-card-icon">⚡</div>
+              <div class="checker-card-title">PSIRT openVuln API</div>
+            </div>
+            <div class="checker-card-desc">
+              REST API for programmatic access to all Cisco advisories. Requires a free Cisco DevNet account and registered app (Client ID + Secret).
+            </div>
+            <div class="checker-card-tags">
+              <span class="checker-tag">Requires DevNet account</span>
+              <span class="checker-tag">JSON / CSAF format</span>
+              <span class="checker-tag">All Cisco products</span>
+            </div>
+            <a href="https://developer.cisco.com/psirt/" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:transparent;color:var(--accent2);border:1px solid var(--accent2);font-family:var(--font-mono);font-size:11px;font-weight:700;padding:8px 16px;border-radius:5px;text-decoration:none;transition:all .2s" onmouseover="this.style.background='rgba(255,107,53,.1)'" onmouseout="this.style.background='transparent'">
+              Get API Access ↗
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick-open Software Checker with pre-selected products -->
+      <div class="psirt-quick-section">
+        <div class="presets-label">🔥 Open Cisco Software Checker — Pre-selected Product</div>
+        <div class="psirt-quick-grid">
+          <a class="psirt-quick-btn" href="https://sec.cloudapps.cisco.com/security/center/softwarechecker.x#ftd" target="_blank" rel="noopener">🔥 Firepower Threat Defense (FTD) <span class="pq-arrow">↗</span></a>
+          <a class="psirt-quick-btn" href="https://sec.cloudapps.cisco.com/security/center/softwarechecker.x#fxos" target="_blank" rel="noopener">🔥 FXOS (4100 / 9300 chassis) <span class="pq-arrow">↗</span></a>
+          <a class="psirt-quick-btn" href="https://sec.cloudapps.cisco.com/security/center/softwarechecker.x#asa" target="_blank" rel="noopener">🛡️ ASA Software <span class="pq-arrow">↗</span></a>
+          <a class="psirt-quick-btn" href="https://sec.cloudapps.cisco.com/security/center/softwarechecker.x#iosxe" target="_blank" rel="noopener">📡 IOS XE <span class="pq-arrow">↗</span></a>
+          <a class="psirt-quick-btn" href="https://sec.cloudapps.cisco.com/security/center/softwarechecker.x#ios" target="_blank" rel="noopener">📡 IOS <span class="pq-arrow">↗</span></a>
+          <a class="psirt-quick-btn" href="https://sec.cloudapps.cisco.com/security/center/softwarechecker.x#nxos" target="_blank" rel="noopener">📡 NX-OS <span class="pq-arrow">↗</span></a>
+          <a class="psirt-quick-btn" href="https://sec.cloudapps.cisco.com/security/center/softwarechecker.x#fmc" target="_blank" rel="noopener">🔥 FMC (Firepower Mgmt Center) <span class="pq-arrow">↗</span></a>
+          <a class="psirt-quick-btn" href="https://sec.cloudapps.cisco.com/security/center/publicationListing.x?product=Cisco+Firepower+4100+Series&type=Security+Advisory" target="_blank" rel="noopener">🔥 Firepower 4100 Series advisories <span class="pq-arrow">↗</span></a>
+          <a class="psirt-quick-btn" href="https://sec.cloudapps.cisco.com/security/center/publicationListing.x?product=Cisco+Firepower+4112&type=Security+Advisory" target="_blank" rel="noopener">🔥 Firepower 4112 advisories <span class="pq-arrow">↗</span></a>
+        </div>
+      </div>
+
+      <!-- openVuln API live search (requires credentials) -->
+      <div class="psirt-api-section">
+        <div class="psirt-api-title">⚡ Live PSIRT openVuln API Search <span style="font-size:11px;font-weight:400;color:var(--muted);font-family:var(--font-mono)">(optional — requires Cisco DevNet credentials)</span></div>
+        <div class="psirt-api-desc">
+          Enter your Cisco DevNet <strong>Client ID</strong> and <strong>Client Secret</strong> to search the PSIRT API live from this dashboard.
+          Credentials are used only in your browser to obtain a token — they are never stored or sent anywhere else.<br>
+          <a href="https://developer.cisco.com/psirt/getting-started/" target="_blank" rel="noopener" style="color:var(--accent2)">How to get API credentials ↗</a>
+        </div>
+        <div class="api-key-row">
+          <div class="filter-group" style="flex:1">
+            <div class="filter-label">Client ID</div>
+            <input type="text" id="psirt-client-id" placeholder="Your Cisco DevNet Client ID" autocomplete="off">
+          </div>
+          <div class="filter-group" style="flex:1">
+            <div class="filter-label">Client Secret</div>
+            <input type="password" id="psirt-client-secret" placeholder="Your Cisco DevNet Client Secret" autocomplete="off">
+          </div>
+          <button class="btn btn-cisco" onclick="psirtAuthenticate()">Authenticate</button>
+        </div>
+        <div class="api-status" id="api-status"></div>
+
+        <!-- Search controls (hidden until authenticated) -->
+        <div id="psirt-search-area" style="display:none">
+          <div class="psirt-search-bar">
+            <div class="filter-group">
+              <div class="filter-label">Search by product keyword</div>
+              <input type="text" id="psirt-keyword" placeholder="e.g. firepower 4112, ftd, asa" style="min-width:260px">
+            </div>
+            <div class="filter-group">
+              <div class="filter-label">Severity</div>
+              <select id="psirt-severity">
+                <option value="">All</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+            <button class="btn btn-cisco" onclick="psirtSearch()">⟳ Search PSIRT</button>
+            <button class="btn btn-outline" onclick="clearPsirtResults()">Clear</button>
+          </div>
+
+          <div class="psirt-results-wrapper" id="psirt-results-wrapper">
+            <div class="psirt-table-header">
+              <div class="psirt-table-title" id="psirt-table-title">Results</div>
+            </div>
+            <div id="psirt-body">
+              <div class="state-container">
+                <div class="state-icon" style="opacity:.4">🔎</div>
+                <div class="state-title">Ready to search</div>
+                <div class="state-subtitle">Enter a product keyword and click Search PSIRT</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div><!-- /tab-psirt -->
+
+</div><!-- /container -->
 
 <footer>
   <div class="container">
     <div class="footer-inner">
-      <div class="footer-note">Data source: <strong>NIST NVD</strong> — nvd.nist.gov &nbsp;|&nbsp; KEV: CISA Known Exploited Vulnerabilities Catalog<br>This tool queries the public NVD API. No data is stored locally.</div>
-      <div class="footer-note" style="text-align:right">Results are paginated — max 20 per page<br>CVSS scores shown are v3.1 where available</div>
+      <div class="footer-note">
+        <strong>NVD tab:</strong> NIST nvd.nist.gov &nbsp;|&nbsp; CISA KEV catalog<br>
+        <strong>Cisco PSIRT tab:</strong> sec.cloudapps.cisco.com &nbsp;|&nbsp; developer.cisco.com/psirt
+      </div>
+      <div class="footer-note" style="text-align:right">
+        No data is stored locally &nbsp;|&nbsp; API credentials stay in your browser only<br>
+        CVSS v3.1 scores where available
+      </div>
     </div>
   </div>
 </footer>
@@ -319,175 +565,211 @@ footer{border-top:1px solid var(--border);padding:20px 0;margin-top:20px}
   <div class="install-icon">📲</div>
   <div class="install-text">
     <strong>Add VulnWatch to Home Screen</strong>
-    <span>Tap <strong>Share</strong> → <strong>Add to Home Screen</strong> to install as an app</span>
+    <span>Tap <strong>Share</strong> → <strong>Add to Home Screen</strong></span>
   </div>
   <button class="install-close" onclick="dismissBanner()" aria-label="Dismiss">✕</button>
 </div>
 
 <script>
+// ═══════════════════════════════════════════════════════════════
+// VENDOR / PRODUCT MAP
+// Key addition: Cisco products now map to SOFTWARE names (not model numbers)
+// because that's how NVD indexes CVEs. Hardware model → software keyword.
+// ═══════════════════════════════════════════════════════════════
 const VENDOR_PRODUCTS = {
-  cisco:{label:"Cisco",keyword:"cisco",products:[
-    {label:"— All Cisco —",value:"cisco"},
-    {label:"Firepower FTD",value:"cisco firepower threat defense"},
-    {label:"Firepower 4100 Series",value:"cisco firepower 4100"},
-    {label:"Firepower 4110",value:"cisco firepower 4110"},
-    {label:"Firepower 4112",value:"cisco firepower 4112"},
-    {label:"Firepower 4115",value:"cisco firepower 4115"},
-    {label:"Firepower 4120",value:"cisco firepower 4120"},
-    {label:"Firepower 4140",value:"cisco firepower 4140"},
-    {label:"Firepower 4150",value:"cisco firepower 4150"},
-    {label:"Firepower 9300",value:"cisco firepower 9300"},
-    {label:"Firepower Management Center (FMC)",value:"cisco firepower management center"},
-    {label:"ASA (Adaptive Security Appliance)",value:"cisco asa"},
-    {label:"IOS XE",value:"cisco ios xe"},
-    {label:"IOS XR",value:"cisco ios xr"},
-    {label:"NX-OS",value:"cisco nx-os"},
-    {label:"Umbrella",value:"cisco umbrella"},
-    {label:"AnyConnect / Secure Client",value:"cisco anyconnect"},
-    {label:"Secure Endpoint (AMP)",value:"cisco secure endpoint"},
-    {label:"WebEx",value:"cisco webex"},
-    {label:"ISE (Identity Services Engine)",value:"cisco identity services engine"},
-  ]},
+  cisco:{label:"Cisco",keyword:"cisco",
+    // NVD NOTE for each Cisco product that is hardware-model-based
+    nvdNote: true,
+    products:[
+      {label:"— All Cisco (software) —",             value:"cisco",          nvdNote:false},
+      // ── Firepower ── runs FTD software on FXOS chassis
+      {label:"Firepower FTD Software",                value:"cisco firepower threat defense", nvdNote:false},
+      {label:"FXOS (Firepower 4100/9300 chassis)",    value:"cisco fxos",     nvdNote:false},
+      {label:"Firepower Management Center (FMC)",     value:"cisco firepower management center", nvdNote:false},
+      // ── note that 4112 is a chassis; search FXOS or FTD ──
+      {label:"⚠ Firepower 4112 → search FXOS below", value:"cisco fxos",     nvdNote:true},
+      {label:"⚠ Firepower 4100 → search FXOS below", value:"cisco fxos",     nvdNote:true},
+      {label:"⚠ Firepower 9300 → search FXOS below", value:"cisco fxos",     nvdNote:true},
+      // ── other Cisco ──
+      {label:"ASA (Adaptive Security Appliance)",     value:"cisco asa",      nvdNote:false},
+      {label:"IOS XE",                                value:"cisco ios xe",   nvdNote:false},
+      {label:"IOS XR",                                value:"cisco ios xr",   nvdNote:false},
+      {label:"NX-OS",                                 value:"cisco nx-os",    nvdNote:false},
+      {label:"Umbrella",                              value:"cisco umbrella", nvdNote:false},
+      {label:"AnyConnect / Secure Client",            value:"cisco anyconnect", nvdNote:false},
+      {label:"Secure Endpoint (AMP)",                 value:"cisco secure endpoint", nvdNote:false},
+      {label:"ISE (Identity Services Engine)",        value:"cisco identity services engine", nvdNote:false},
+      {label:"WebEx",                                 value:"cisco webex",    nvdNote:false},
+    ]
+  },
   palo_alto:{label:"Palo Alto Networks",keyword:"palo alto",products:[
-    {label:"— All Palo Alto —",value:"palo alto networks"},
-    {label:"PAN-OS (Firewalls)",value:"palo alto pan-os"},
-    {label:"Prisma Access",value:"palo alto prisma access"},
-    {label:"Prisma Cloud",value:"palo alto prisma cloud"},
-    {label:"Cortex XDR",value:"palo alto cortex xdr"},
-    {label:"GlobalProtect",value:"palo alto globalprotect"},
-    {label:"Panorama",value:"palo alto panorama"},
-    {label:"WildFire",value:"palo alto wildfire"},
+    {label:"— All Palo Alto —",   value:"palo alto networks"},
+    {label:"PAN-OS (Firewalls)",  value:"palo alto pan-os"},
+    {label:"Prisma Access",       value:"palo alto prisma access"},
+    {label:"Prisma Cloud",        value:"palo alto prisma cloud"},
+    {label:"Cortex XDR",          value:"palo alto cortex xdr"},
+    {label:"GlobalProtect",       value:"palo alto globalprotect"},
+    {label:"Panorama",            value:"palo alto panorama"},
+    {label:"WildFire",            value:"palo alto wildfire"},
   ]},
   fortinet:{label:"Fortinet",keyword:"fortinet",products:[
-    {label:"— All Fortinet —",value:"fortinet"},
-    {label:"FortiOS",value:"fortinet fortios"},
-    {label:"FortiGate",value:"fortinet fortigate"},
-    {label:"FortiAnalyzer",value:"fortinet fortianalyzer"},
-    {label:"FortiManager",value:"fortinet fortimanager"},
-    {label:"FortiClient",value:"fortinet forticlient"},
-    {label:"FortiWeb",value:"fortinet fortiweb"},
-    {label:"FortiProxy",value:"fortinet fortiproxy"},
+    {label:"— All Fortinet —",  value:"fortinet"},
+    {label:"FortiOS",           value:"fortinet fortios"},
+    {label:"FortiGate",         value:"fortinet fortigate"},
+    {label:"FortiAnalyzer",     value:"fortinet fortianalyzer"},
+    {label:"FortiManager",      value:"fortinet fortimanager"},
+    {label:"FortiClient",       value:"fortinet forticlient"},
+    {label:"FortiWeb",          value:"fortinet fortiweb"},
+    {label:"FortiProxy",        value:"fortinet fortiproxy"},
   ]},
   checkpoint:{label:"Check Point",keyword:"check point",products:[
-    {label:"— All Check Point —",value:"check point"},
-    {label:"Gaia OS",value:"check point gaia"},
-    {label:"CloudGuard",value:"check point cloudguard"},
-    {label:"Harmony Endpoint",value:"check point harmony endpoint"},
-    {label:"SmartConsole",value:"check point smartconsole"},
+    {label:"— All Check Point —", value:"check point"},
+    {label:"Gaia OS",             value:"check point gaia"},
+    {label:"CloudGuard",          value:"check point cloudguard"},
+    {label:"Harmony Endpoint",    value:"check point harmony endpoint"},
+    {label:"SmartConsole",        value:"check point smartconsole"},
   ]},
   juniper:{label:"Juniper Networks",keyword:"juniper",products:[
-    {label:"— All Juniper —",value:"juniper networks"},
-    {label:"Junos OS",value:"juniper junos"},
-    {label:"SRX Series",value:"juniper srx"},
-    {label:"EX Series",value:"juniper ex series"},
-    {label:"Mist",value:"juniper mist"},
+    {label:"— All Juniper —", value:"juniper networks"},
+    {label:"Junos OS",        value:"juniper junos"},
+    {label:"SRX Series",      value:"juniper srx"},
+    {label:"EX Series",       value:"juniper ex series"},
+    {label:"Mist",            value:"juniper mist"},
   ]},
   microsoft:{label:"Microsoft (Windows)",keyword:"microsoft",products:[
-    {label:"— All Microsoft —",value:"microsoft"},
-    {label:"Windows 11",value:"microsoft windows 11"},
-    {label:"Windows 10",value:"microsoft windows 10"},
-    {label:"Windows Server 2025",value:"microsoft windows server 2025"},
-    {label:"Windows Server 2022",value:"microsoft windows server 2022"},
-    {label:"Windows Server 2019",value:"microsoft windows server 2019"},
-    {label:"Windows Server 2016",value:"microsoft windows server 2016"},
-    {label:"Windows Server (all)",value:"microsoft windows server"},
-    {label:"Azure",value:"microsoft azure"},
-    {label:"Exchange Server",value:"microsoft exchange server"},
-    {label:"SharePoint",value:"microsoft sharepoint"},
-    {label:"Teams",value:"microsoft teams"},
-    {label:"Office / 365",value:"microsoft office 365"},
-    {label:"Defender for Endpoint",value:"microsoft defender for endpoint"},
-    {label:"Active Directory / AD DS",value:"microsoft active directory"},
-    {label:"RDP / Remote Desktop",value:"microsoft remote desktop"},
+    {label:"— All Microsoft —",        value:"microsoft"},
+    {label:"Windows 11",               value:"microsoft windows 11"},
+    {label:"Windows 10",               value:"microsoft windows 10"},
+    {label:"Windows Server 2025",      value:"microsoft windows server 2025"},
+    {label:"Windows Server 2022",      value:"microsoft windows server 2022"},
+    {label:"Windows Server 2019",      value:"microsoft windows server 2019"},
+    {label:"Windows Server 2016",      value:"microsoft windows server 2016"},
+    {label:"Windows Server (all)",     value:"microsoft windows server"},
+    {label:"Azure",                    value:"microsoft azure"},
+    {label:"Exchange Server",          value:"microsoft exchange server"},
+    {label:"SharePoint",               value:"microsoft sharepoint"},
+    {label:"Teams",                    value:"microsoft teams"},
+    {label:"Office / 365",             value:"microsoft office 365"},
+    {label:"Defender for Endpoint",    value:"microsoft defender for endpoint"},
+    {label:"Active Directory / AD DS", value:"microsoft active directory"},
+    {label:"RDP / Remote Desktop",     value:"microsoft remote desktop"},
   ]},
   redhat:{label:"Red Hat",keyword:"red hat",products:[
-    {label:"— All Red Hat —",value:"red hat"},
-    {label:"RHEL 9",value:"red hat enterprise linux 9"},
-    {label:"RHEL 8",value:"red hat enterprise linux 8"},
-    {label:"RHEL 7",value:"red hat enterprise linux 7"},
-    {label:"RHEL (all versions)",value:"red hat enterprise linux"},
-    {label:"OpenShift",value:"red hat openshift"},
-    {label:"OpenShift Container Platform",value:"red hat openshift container platform"},
-    {label:"Ansible Automation Platform",value:"red hat ansible"},
-    {label:"JBoss / WildFly",value:"red hat jboss"},
-    {label:"Satellite",value:"red hat satellite"},
+    {label:"— All Red Hat —",                  value:"red hat"},
+    {label:"RHEL 9",                            value:"red hat enterprise linux 9"},
+    {label:"RHEL 8",                            value:"red hat enterprise linux 8"},
+    {label:"RHEL 7",                            value:"red hat enterprise linux 7"},
+    {label:"RHEL (all versions)",               value:"red hat enterprise linux"},
+    {label:"OpenShift",                         value:"red hat openshift"},
+    {label:"OpenShift Container Platform",      value:"red hat openshift container platform"},
+    {label:"Ansible Automation Platform",       value:"red hat ansible"},
+    {label:"JBoss / WildFly",                  value:"red hat jboss"},
+    {label:"Satellite",                         value:"red hat satellite"},
   ]},
   linux:{label:"Linux Kernel",keyword:"linux kernel",products:[
-    {label:"— Linux Kernel —",value:"linux linux kernel"},
+    {label:"Linux Kernel", value:"linux linux kernel"},
   ]},
   ubuntu:{label:"Ubuntu / Canonical",keyword:"ubuntu",products:[
-    {label:"— All Ubuntu —",value:"ubuntu"},
-    {label:"Ubuntu 24.04 LTS",value:"ubuntu 24.04"},
-    {label:"Ubuntu 22.04 LTS",value:"ubuntu 22.04"},
-    {label:"Ubuntu 20.04 LTS",value:"ubuntu 20.04"},
-    {label:"Ubuntu Server (all)",value:"canonical ubuntu"},
+    {label:"— All Ubuntu —",       value:"ubuntu"},
+    {label:"Ubuntu 24.04 LTS",     value:"ubuntu 24.04"},
+    {label:"Ubuntu 22.04 LTS",     value:"ubuntu 22.04"},
+    {label:"Ubuntu 20.04 LTS",     value:"ubuntu 20.04"},
+    {label:"Ubuntu Server (all)",  value:"canonical ubuntu"},
   ]},
   debian:{label:"Debian",keyword:"debian",products:[
-    {label:"— All Debian —",value:"debian"},
-    {label:"Debian 12 (Bookworm)",value:"debian 12"},
-    {label:"Debian 11 (Bullseye)",value:"debian 11"},
+    {label:"— All Debian —",         value:"debian"},
+    {label:"Debian 12 (Bookworm)",   value:"debian 12"},
+    {label:"Debian 11 (Bullseye)",   value:"debian 11"},
   ]},
   suse:{label:"SUSE Linux",keyword:"suse",products:[
-    {label:"— All SUSE —",value:"suse"},
-    {label:"SLES (Enterprise)",value:"suse linux enterprise server"},
-    {label:"openSUSE Leap",value:"opensuse leap"},
+    {label:"— All SUSE —",       value:"suse"},
+    {label:"SLES (Enterprise)",  value:"suse linux enterprise server"},
+    {label:"openSUSE Leap",      value:"opensuse leap"},
   ]},
   vmware:{label:"VMware / Broadcom",keyword:"vmware",products:[
-    {label:"— All VMware —",value:"vmware"},
-    {label:"vSphere / ESXi",value:"vmware esxi"},
-    {label:"vCenter Server",value:"vmware vcenter"},
-    {label:"NSX",value:"vmware nsx"},
-    {label:"Horizon",value:"vmware horizon"},
-    {label:"Workspace ONE",value:"vmware workspace one"},
+    {label:"— All VMware —",   value:"vmware"},
+    {label:"vSphere / ESXi",   value:"vmware esxi"},
+    {label:"vCenter Server",   value:"vmware vcenter"},
+    {label:"NSX",              value:"vmware nsx"},
+    {label:"Horizon",          value:"vmware horizon"},
+    {label:"Workspace ONE",    value:"vmware workspace one"},
   ]},
   f5:{label:"F5 Networks",keyword:"f5",products:[
-    {label:"— All F5 —",value:"f5 networks"},
-    {label:"BIG-IP",value:"f5 big-ip"},
-    {label:"NGINX",value:"f5 nginx"},
-    {label:"BIG-IQ",value:"f5 big-iq"},
+    {label:"— All F5 —", value:"f5 networks"},
+    {label:"BIG-IP",     value:"f5 big-ip"},
+    {label:"NGINX",      value:"f5 nginx"},
+    {label:"BIG-IQ",     value:"f5 big-iq"},
   ]},
   citrix:{label:"Citrix",keyword:"citrix",products:[
-    {label:"— All Citrix —",value:"citrix"},
-    {label:"NetScaler / ADC",value:"citrix netscaler"},
+    {label:"— All Citrix —",         value:"citrix"},
+    {label:"NetScaler / ADC",        value:"citrix netscaler"},
     {label:"Virtual Apps & Desktops",value:"citrix virtual apps"},
-    {label:"Gateway",value:"citrix gateway"},
+    {label:"Gateway",                value:"citrix gateway"},
   ]},
   ivanti:{label:"Ivanti",keyword:"ivanti",products:[
-    {label:"— All Ivanti —",value:"ivanti"},
+    {label:"— All Ivanti —",        value:"ivanti"},
     {label:"Connect Secure (Pulse)",value:"ivanti connect secure"},
-    {label:"Policy Secure",value:"ivanti policy secure"},
-    {label:"Endpoint Manager",value:"ivanti endpoint manager"},
-    {label:"EPMM (MobileIron)",value:"ivanti epmm"},
+    {label:"Policy Secure",         value:"ivanti policy secure"},
+    {label:"Endpoint Manager",      value:"ivanti endpoint manager"},
+    {label:"EPMM (MobileIron)",     value:"ivanti epmm"},
   ]},
 };
 
+// ── NVD State ────────────────────────────────────────────────────────────────
 let allResults=[],displayFilter='all',kevSet=new Set(),currentPage=0;
 const PAGE_SIZE=20;
 
+// ── PSIRT State ──────────────────────────────────────────────────────────────
+let psirtToken=null,psirtResults=[];
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function switchTab(tab, btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+
+// ── Preset quick-search (NVD tab) ─────────────────────────────────────────────
 function applyPreset(vendorKey,productValue,version,severity){
   const vs=document.getElementById('vendor-select');
-  vs.value=vendorKey;
-  onVendorChange();
+  vs.value=vendorKey; onVendorChange();
   const ps=document.getElementById('product-select');
   const match=Array.from(ps.options).find(o=>o.value===productValue);
   if(match)ps.value=productValue;
   document.getElementById('version-input').value=version||'';
   document.getElementById('severity-select').value=severity||'';
+  maybeShowNvdNote(vendorKey, productValue);
   runSearch();
   setTimeout(()=>document.querySelector('.table-wrapper').scrollIntoView({behavior:'smooth',block:'start'}),400);
 }
 
+// ── Vendor change → populate product dropdown ─────────────────────────────────
 function onVendorChange(){
   const vk=document.getElementById('vendor-select').value;
   const ps=document.getElementById('product-select');
   ps.innerHTML='';
-  if(!vk||!VENDOR_PRODUCTS[vk]){ps.innerHTML='<option value="">— Select Vendor First —</option>';return;}
+  if(!vk||!VENDOR_PRODUCTS[vk]){ps.innerHTML='<option value="">— Select Vendor First —</option>';hideNvdNote();return;}
   VENDOR_PRODUCTS[vk].products.forEach(p=>{
     const o=document.createElement('option');
-    o.value=p.value;o.textContent=p.label;ps.appendChild(o);
+    o.value=p.value; o.textContent=p.label; ps.appendChild(o);
   });
+  // Show note if it's a cisco product with hardware model entries
+  if(vk==='cisco') maybeShowNvdNote(vk, ps.value);
+  else hideNvdNote();
 }
 
+function maybeShowNvdNote(vendorKey, productValue){
+  const noteEl=document.getElementById('nvd-note');
+  const vp=VENDOR_PRODUCTS[vendorKey];
+  if(!vp||vendorKey!=='cisco'){hideNvdNote();return;}
+  const prod=vp.products.find(p=>p.value===productValue);
+  if(prod && prod.nvdNote){noteEl.classList.add('visible');}
+  else{hideNvdNote();}
+}
+function hideNvdNote(){document.getElementById('nvd-note').classList.remove('visible');}
+
+// ── NVD main search ───────────────────────────────────────────────────────────
 async function runSearch(){
   const productVal=document.getElementById('product-select').value;
   const vendorKey=document.getElementById('vendor-select').value;
@@ -502,16 +784,16 @@ async function runSearch(){
 
   showLoading();
 
-  // Search context badge
+  // Active search context badge
   const ctxEl=document.getElementById('search-context');
   const vLabel=VENDOR_PRODUCTS[vendorKey]?.label||vendorKey;
   const pLabel=document.getElementById('product-select').selectedOptions[0]?.text||productVal;
-  let ctxHtml=`<span style="color:var(--muted)">Searching:</span>
+  let ctxHtml=`<span style="color:var(--muted)">Searching NVD:</span>
     <span class="ctx-tag">${escHtml(vLabel)}</span>
     <span class="ctx-tag">${escHtml(pLabel)}</span>`;
   if(version)ctxHtml+=` <span class="ctx-tag">v${escHtml(version)}</span>`;
   if(severity)ctxHtml+=` <span class="ctx-tag">${escHtml(severity)}</span>`;
-  ctxEl.innerHTML=ctxHtml;ctxEl.classList.add('visible');
+  ctxEl.innerHTML=ctxHtml; ctxEl.classList.add('visible');
 
   try{
     if(kevSet.size===0){
@@ -520,7 +802,6 @@ async function runSearch(){
         if(kr.ok){const kd=await kr.json();kevSet=new Set(kd.vulnerabilities.map(v=>v.cveID));}
       }catch(e){}
     }
-
     const params=new URLSearchParams({keywordSearch:keyword,resultsPerPage:100,startIndex:0});
     if(severity)params.set('cvssV3Severity',severity);
     if(zeroD==='kev')params.set('isKevCveOnly','true');
@@ -529,10 +810,10 @@ async function runSearch(){
     if(!resp.ok)throw new Error(`NVD API returned ${resp.status}`);
     const data=await resp.json();
     allResults=data.vulnerabilities||[];
-    currentPage=0;displayFilter='all';
+    currentPage=0; displayFilter='all';
     document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));
     document.querySelector('.toggle-btn').classList.add('active');
-    renderResults();updateStats();
+    renderResults(); updateStats();
     const now=new Date();
     document.getElementById('last-updated').textContent=`Updated: ${now.toLocaleTimeString()} — ${data.totalResults??allResults.length} CVEs found`;
   }catch(err){
@@ -540,6 +821,7 @@ async function runSearch(){
   }
 }
 
+// ── NVD render ────────────────────────────────────────────────────────────────
 function getFilteredResults(){
   if(displayFilter==='all')return allResults;
   if(displayFilter==='kev')return allResults.filter(v=>kevSet.has(v.cve.id));
@@ -554,19 +836,21 @@ function renderResults(){
   const filterToggles=document.getElementById('filter-toggles');
 
   if(total===0){
-    body.innerHTML=`<div class="state-container"><div class="state-icon">🔍</div><div class="state-title">No CVEs found</div><div class="state-subtitle">Try adjusting filters or removing the version number for broader results.</div></div>`;
-    statsBar.style.display='none';filterToggles.style.display='none';
-    document.getElementById('table-title').textContent='Results';return;
+    body.innerHTML=`<div class="state-container"><div class="state-icon">🔍</div><div class="state-title">No CVEs found</div>
+      <div class="state-subtitle">NVD uses software names, not hardware model numbers.<br>
+      Try <strong style="color:var(--accent)">FTD</strong> or <strong style="color:var(--accent)">FXOS</strong> for Firepower hardware.<br>
+      Or use the <strong style="color:var(--accent2);cursor:pointer" onclick="switchTab('psirt',document.querySelectorAll('.tab-btn')[1])">Cisco PSIRT tab →</strong> for model-specific results.</div></div>`;
+    statsBar.style.display='none'; filterToggles.style.display='none';
+    document.getElementById('table-title').textContent='Results'; return;
   }
 
-  statsBar.style.display='grid';filterToggles.style.display='flex';
+  statsBar.style.display='grid'; filterToggles.style.display='flex';
   document.getElementById('table-title').textContent=`${total} vulnerabilities found (showing ${start+1}–${Math.min(start+PAGE_SIZE,total)})`;
 
   let html=`<table><thead><tr><th>CVE ID</th><th>Severity</th><th>CVSS</th><th>Description</th><th>Published</th><th>Status</th></tr></thead><tbody>`;
-
   pageItems.forEach((item,i)=>{
     const cve=item.cve,id=cve.id;
-    const desc=cve.descriptions?.find(d=>d.lang==='en')?.value||'No description available.';
+    const desc=cve.descriptions?.find(d=>d.lang==='en')?.value||'No description.';
     const sev=getSeverity(item),score=getCVSS(item);
     const pub=cve.published?cve.published.slice(0,10):'—';
     const isKev=kevSet.has(id);
@@ -580,7 +864,6 @@ function renderResults(){
       <td>${isKev?'<span class="zero-day-flag">⚡ KEV</span>':'<span style="color:var(--muted);font-family:var(--font-mono);font-size:11px;">—</span>'}</td>
     </tr>`;
   });
-
   html+='</tbody></table>';
 
   const totalPages=Math.ceil(total/PAGE_SIZE);
@@ -617,22 +900,177 @@ function updateStats(){
 }
 
 function setDisplayFilter(val,btn){
-  displayFilter=val;currentPage=0;
+  displayFilter=val; currentPage=0;
   document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');renderResults();
+  btn.classList.add('active'); renderResults();
 }
 
 function clearResults(){
   allResults=[];
-  document.getElementById('vuln-body').innerHTML=`<div class="state-container"><div class="state-icon">🛡️</div><div class="state-title">Select a vendor and product to begin</div><div class="state-subtitle">Data sourced live from NIST National Vulnerability Database (NVD)</div></div>`;
+  document.getElementById('vuln-body').innerHTML=`<div class="state-container"><div class="state-icon">🛡️</div><div class="state-title">Select a vendor and product to begin</div><div class="state-subtitle">Data sourced live from NIST NVD</div></div>`;
   document.getElementById('stats-bar').style.display='none';
   document.getElementById('filter-toggles').style.display='none';
   document.getElementById('table-title').textContent='Results';
   document.getElementById('last-updated').textContent='—';
   document.getElementById('search-context').classList.remove('visible');
   document.getElementById('version-input').value='';
+  hideNvdNote();
 }
 
+// ════════════════════════════════════════════════════════════════
+// PSIRT openVuln API integration
+// OAuth2 client_credentials flow → search by product keyword
+// ════════════════════════════════════════════════════════════════
+async function psirtAuthenticate(){
+  const clientId=document.getElementById('psirt-client-id').value.trim();
+  const clientSecret=document.getElementById('psirt-client-secret').value.trim();
+  const statusEl=document.getElementById('api-status');
+
+  if(!clientId||!clientSecret){
+    statusEl.className='api-status err';
+    statusEl.textContent='⚠ Please enter both Client ID and Client Secret.'; return;
+  }
+
+  statusEl.className='api-status';
+  statusEl.style.display='block';
+  statusEl.style.background='rgba(108,122,153,.1)';
+  statusEl.style.border='1px solid var(--border)';
+  statusEl.style.color='var(--muted)';
+  statusEl.textContent='Authenticating…';
+
+  try{
+    // Cisco oauth2 token endpoint
+    const tokenResp = await fetch('https://id.cisco.com/oauth2/default/v1/token', {
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams({
+        grant_type:'client_credentials',
+        client_id:clientId,
+        client_secret:clientSecret
+      })
+    });
+    if(!tokenResp.ok){
+      const err=await tokenResp.text();
+      throw new Error(`Auth failed (${tokenResp.status}): ${err.slice(0,120)}`);
+    }
+    const tokenData=await tokenResp.json();
+    psirtToken=tokenData.access_token;
+    statusEl.className='api-status ok';
+    statusEl.textContent='✓ Authenticated successfully — you can now search the PSIRT API.';
+    document.getElementById('psirt-search-area').style.display='block';
+  }catch(err){
+    statusEl.className='api-status err';
+    statusEl.textContent=`✗ ${err.message}`;
+    psirtToken=null;
+  }
+}
+
+async function psirtSearch(){
+  if(!psirtToken){
+    document.getElementById('api-status').className='api-status err';
+    document.getElementById('api-status').textContent='✗ Please authenticate first.';
+    return;
+  }
+  const keyword=document.getElementById('psirt-keyword').value.trim();
+  const severity=document.getElementById('psirt-severity').value;
+  if(!keyword){showPsirtError('Please enter a product keyword.');return;}
+
+  showPsirtLoading();
+
+  try{
+    // Build URL: search by product keyword, optionally filter by severity
+    let url;
+    if(severity){
+      url=`https://apix.cisco.com/security/advisories/v2/product?product=${encodeURIComponent(keyword)}&severity=${severity}`;
+    }else{
+      url=`https://apix.cisco.com/security/advisories/v2/product?product=${encodeURIComponent(keyword)}`;
+    }
+
+    const resp=await fetch(url,{
+      headers:{'Authorization':`Bearer ${psirtToken}`,'Accept':'application/json'}
+    });
+
+    if(resp.status===401){psirtToken=null;throw new Error('Token expired. Please re-authenticate.');}
+    if(!resp.ok)throw new Error(`PSIRT API returned ${resp.status}: ${await resp.text().then(t=>t.slice(0,100))}`);
+
+    const data=await resp.json();
+    // API returns {advisories: [...]} or just an array
+    psirtResults=data.advisories||data||[];
+    renderPsirtResults(keyword);
+
+    const now=new Date();
+    document.getElementById('last-updated').textContent=`PSIRT: ${now.toLocaleTimeString()} — ${psirtResults.length} advisories`;
+  }catch(err){
+    showPsirtError(`${err.message}`);
+  }
+}
+
+function renderPsirtResults(keyword){
+  const body=document.getElementById('psirt-body');
+  const titleEl=document.getElementById('psirt-table-title');
+
+  if(!psirtResults||psirtResults.length===0){
+    body.innerHTML=`<div class="state-container"><div class="state-icon">🔍</div>
+      <div class="state-title">No advisories found for "${escHtml(keyword)}"</div>
+      <div class="state-subtitle">Try a broader term like "ftd", "fxos", "asa", or just "firepower".</div></div>`;
+    titleEl.textContent='Results'; return;
+  }
+
+  titleEl.textContent=`${psirtResults.length} advisories found for "${keyword}"`;
+
+  let html=`<table class="psirt-advisory-table"><thead><tr>
+    <th>Advisory ID</th><th>Severity</th><th>Title</th><th>CVEs</th><th>Published</th><th>Links</th>
+  </tr></thead><tbody>`;
+
+  psirtResults.forEach((adv,i)=>{
+    const id=adv.advisoryId||adv.advisory_id||'—';
+    const title=adv.advisoryTitle||adv.summary||'No title';
+    const sir=(adv.sir||adv.severity||'UNKNOWN').toUpperCase();
+    const cvesRaw=adv.cves||adv.cve_id||[];
+    const cves=Array.isArray(cvesRaw)?cvesRaw:[cvesRaw];
+    const pub=(adv.firstPublished||adv.first_published||'').slice(0,10)||'—';
+    const url=adv.publicationUrl||adv.publication_url||`https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/${id}`;
+    const cvssScore=adv.cvssBaseScore||adv.cvss_base_score||'—';
+
+    const cveHtml=cves.slice(0,3).map(c=>`<a href="https://nvd.nist.gov/vuln/detail/${c}" target="_blank" rel="noopener" style="color:var(--accent);font-family:var(--font-mono);font-size:10px;text-decoration:none">${c}</a>`).join(' ')
+      +(cves.length>3?` <span style="color:var(--muted);font-size:10px">+${cves.length-3} more</span>`:'');
+
+    html+=`<tr style="animation-delay:${i*.03}s">
+      <td class="advisory-id"><a href="${escHtml(url)}" target="_blank" rel="noopener">${escHtml(id)}</a></td>
+      <td><span class="sir-badge sir-${sir}">${sir}</span>${cvssScore!=='—'?`<br><span style="font-family:var(--font-mono);font-size:10px;color:var(--muted)">${cvssScore}</span>`:''}</td>
+      <td style="max-width:340px;font-size:12px;color:#9aa3bf;line-height:1.5">${escHtml(title.slice(0,120))}${title.length>120?'…':''}</td>
+      <td class="psirt-cve-list">${cveHtml||'—'}</td>
+      <td class="date-cell">${pub}</td>
+      <td><a href="${escHtml(url)}" target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:10px;color:var(--accent2);text-decoration:none">Advisory ↗</a></td>
+    </tr>`;
+  });
+
+  html+='</tbody></table>';
+  body.innerHTML=html;
+}
+
+function showPsirtLoading(){
+  document.getElementById('psirt-body').innerHTML=`<div class="state-container">
+    <div class="spinner spinner-orange"></div>
+    <div class="state-title">Querying Cisco PSIRT…</div>
+    <div class="state-subtitle">Fetching official Cisco security advisories.</div></div>`;
+}
+function showPsirtError(msg){
+  document.getElementById('psirt-body').innerHTML=`<div class="state-container">
+    <div class="state-icon">⚠️</div><div class="state-title">Error</div>
+    <div class="state-subtitle">${escHtml(msg)}</div></div>`;
+}
+function clearPsirtResults(){
+  psirtResults=[];
+  document.getElementById('psirt-body').innerHTML=`<div class="state-container">
+    <div class="state-icon" style="opacity:.4">🔎</div>
+    <div class="state-title">Ready to search</div>
+    <div class="state-subtitle">Enter a product keyword and click Search PSIRT</div></div>`;
+  document.getElementById('psirt-table-title').textContent='Results';
+  document.getElementById('psirt-keyword').value='';
+}
+
+// ── Shared helpers ────────────────────────────────────────────────────────────
 function getSeverity(item){
   const m=item.cve?.metrics;
   if(m?.cvssMetricV31?.[0])return m.cvssMetricV31[0].cvssData.baseSeverity||'UNKNOWN';
@@ -640,7 +1078,6 @@ function getSeverity(item){
   if(m?.cvssMetricV2?.[0]){const s=m.cvssMetricV2[0].baseSeverity;return s==='MEDIUM'?'MEDIUM':s==='HIGH'?'HIGH':s==='LOW'?'LOW':'UNKNOWN';}
   return 'UNKNOWN';
 }
-
 function getCVSS(item){
   const m=item.cve?.metrics;
   if(m?.cvssMetricV31?.[0])return m.cvssMetricV31[0].cvssData.baseScore||0;
@@ -648,39 +1085,45 @@ function getCVSS(item){
   if(m?.cvssMetricV2?.[0])return m.cvssMetricV2[0].cvssData.baseScore||0;
   return 0;
 }
-
 function escHtml(str){return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 function showLoading(){
-  document.getElementById('vuln-body').innerHTML=`<div class="state-container"><div class="spinner"></div><div class="state-title">Querying NVD Database…</div><div class="state-subtitle">Fetching live vulnerability data. This may take a few seconds.</div></div>`;
+  document.getElementById('vuln-body').innerHTML=`<div class="state-container">
+    <div class="spinner"></div><div class="state-title">Querying NVD Database…</div>
+    <div class="state-subtitle">Fetching live vulnerability data. This may take a few seconds.</div></div>`;
   document.getElementById('stats-bar').style.display='none';
   document.getElementById('filter-toggles').style.display='none';
 }
-
 function showError(msg){
-  document.getElementById('vuln-body').innerHTML=`<div class="state-container"><div class="state-icon">⚠️</div><div class="state-title">Error</div><div class="state-subtitle">${escHtml(msg)}</div></div>`;
+  document.getElementById('vuln-body').innerHTML=`<div class="state-container">
+    <div class="state-icon">⚠️</div><div class="state-title">Error</div>
+    <div class="state-subtitle">${escHtml(msg)}</div></div>`;
 }
 
+// ── PWA ───────────────────────────────────────────────────────────────────────
 function dismissBanner(){document.getElementById('install-banner').classList.remove('visible');sessionStorage.setItem('install-dismissed','1');}
-
 function maybeShowInstallBanner(){
   const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.MSStream;
   if(isIOS&&!window.navigator.standalone&&!sessionStorage.getItem('install-dismissed'))
     setTimeout(()=>document.getElementById('install-banner').classList.add('visible'),2500);
 }
-
 function registerServiceWorker(){
   if(!('serviceWorker'in navigator))return;
-  const swCode=`const CACHE='vulnwatch-v2';const SHELL=[self.location.href.replace(/\\/sw\\.js.*/,'/')];
+  const swCode=`const CACHE='vulnwatch-v3';const SHELL=[self.location.href.replace(/\\/sw\\.js.*/,'/')];
   self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()))});
   self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
-  self.addEventListener('fetch',e=>{const u=e.request.url;if(u.includes('nvd.nist.gov')||u.includes('cisa.gov')||u.includes('googleapis.com')){e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));}else{e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).then(r=>{const cl=r.clone();caches.open(CACHE).then(ca=>ca.put(e.request,cl));return r;})));}});`;
+  self.addEventListener('fetch',e=>{const u=e.request.url;
+    if(u.includes('nvd.nist.gov')||u.includes('cisa.gov')||u.includes('apix.cisco.com')||u.includes('id.cisco.com')||u.includes('googleapis.com')){
+      e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));
+    }else{
+      e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).then(r=>{const cl=r.clone();caches.open(CACHE).then(ca=>ca.put(e.request,cl));return r;})));
+    }
+  });`;
   const blob=new Blob([swCode],{type:'application/javascript'});
   navigator.serviceWorker.register(URL.createObjectURL(blob),{scope:'./'})
     .then(()=>console.log('[VulnWatch] SW registered'))
     .catch(e=>console.warn('[VulnWatch] SW failed:',e));
 }
-
 window.addEventListener('load',()=>{maybeShowInstallBanner();registerServiceWorker();});
 </script>
 </body>
